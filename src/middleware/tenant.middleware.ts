@@ -13,9 +13,9 @@ export class HeaderContextMiddleware implements NestMiddleware {
     }
 
     // Simpan ke request object
-    (req as any).tenant = tenant;
-    (req as any).startPeriod = startPeriod;
-    (req as any).endPeriod = endPeriod;
+    req.tenant = tenant;
+    req.startPeriod = startPeriod;
+    req.endPeriod = endPeriod;
 
     next();
   }

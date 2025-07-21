@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import type { Knex } from 'knex';
 import KnexLib from 'knex';
 import { createDbConfig } from '../config/database.config';
+import { createSisAdminDbConfig } from '../config/database.config';
 
 @Injectable()
 export class DbService implements OnModuleDestroy {
@@ -27,6 +28,17 @@ export class DbService implements OnModuleDestroy {
     const config: Knex.Config = createDbConfig(host, user, password, dbName);
     const newConnection = KnexLib(config);
 
+    this.connections.set(dbName, newConnection);
+    return newConnection;
+  }
+
+  getSisAdminConnection(): Knex {
+    const dbName = 'sis_admin';
+    if (this.connections.has(dbName)) {
+      return this.connections.get(dbName)!;
+    }
+    const config = createSisAdminDbConfig();
+    const newConnection = KnexLib(config);
     this.connections.set(dbName, newConnection);
     return newConnection;
   }

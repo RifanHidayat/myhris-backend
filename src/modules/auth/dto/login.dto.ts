@@ -15,4 +15,7 @@ export class LoginDto {
 
   @IsOptional()
   endPeriod?: string;
+
+  @IsOptional()
+  tokenNotif?: string;
 }
