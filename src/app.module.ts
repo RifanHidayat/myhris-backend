@@ -1,12 +1,19 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DbService } from '../../hris-backend/src/config/database.service';
+import { DbService } from '../src/config/database.service';
+import { HeaderContextMiddleware } from './middleware/tenant.middleware';
 
 @Module({
   imports: [],
   controllers: [AppController],
-  providers: [AppService],
-   exports: [DbService],
+  providers: [AppService, DbService], // Pastikan DbService juga di sini
+  exports: [DbService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(HeaderContextMiddleware)
+      .forRoutes('*'); // Middleware berlaku untuk semua route
+  }
+}
