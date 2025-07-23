@@ -38,12 +38,20 @@ interface DatabaseRow {
   name: string;
 }
 
+// function hasRows(obj: unknown): obj is { rows: DatabaseRow[] } {
+//   return (
+//     typeof obj === 'object' &&
+//     obj !== null &&
+//     Object.prototype.hasOwnProperty.call(obj, 'rows') &&
+//     Array.isArray((obj as { [key: string]: unknown }).rows)
+//   );
+// }
 function hasRows(obj: unknown): obj is { rows: DatabaseRow[] } {
   return (
     typeof obj === 'object' &&
     obj !== null &&
-    Object.prototype.hasOwnProperty.call(obj, 'rows') &&
-    Array.isArray((obj as { [key: string]: unknown }).rows)
+    'rows' in obj &&
+    Array.isArray((obj as { rows: unknown }).rows)
   );
 }
 
@@ -266,7 +274,9 @@ export class AuthService {
     }
   }
 
-  async database(dto: DatabaseRequestDto) {
+  async database(
+    dto: DatabaseRequestDto,
+  ): Promise<{ status: boolean; message: string; data: DatabaseRow[] }> {
     const { email } = dto;
     const knex = this.dbService.getSisAdminConnection();
     let trx: Knex.Transaction | undefined;
@@ -290,15 +300,16 @@ export class AuthService {
       } else {
         return {
           status: true,
-          message: 'berhasil update',
+          message: 'Berhasil ambil data',
           data: rows,
         };
       }
-    } catch {
+    } catch (error) {
+      console.error('Error in database:', error);
       if (trx) await trx.rollback();
       return {
         status: false,
-        message: 'Gagal ambil data',
+        message: 'terjadi kesalahan ',
         data: [],
       };
     }

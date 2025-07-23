@@ -1,9 +1,9 @@
 import { IsString } from 'class-validator';
 
-export class DatabaseRequestDto {
+export class EmployeeDetailDto {
   @IsString()
-  tenant: string;
+  database: string;
 
   @IsString()
-  email: string;
+  em_id: string;
 }

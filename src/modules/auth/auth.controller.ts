@@ -1,7 +1,6 @@
 import { Controller, Post, Body, Headers } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { DatabaseRequestDto } from './dto/database-request.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -25,7 +24,20 @@ export class AuthController {
   }
 
   @Post('database')
-  async database(@Body() dto: DatabaseRequestDto) {
-    return this.authService.database(dto);
+  async fetchDatabase(
+    @Body() loginDto: LoginDto,
+    @Headers('x-tenant-id') tenant: string,
+  ): Promise<any> {
+    const dtoWithHeaders = {
+      ...loginDto,
+      tenant,
+    };
+
+    return this.authService.database(dtoWithHeaders);
   }
+  // Endpoint /database yang benar
+  // @Post('database')
+  // async database(@Body() dto: DatabaseRequestDto) {
+  //   // Implementasi sesuai kebutuhan Anda
+  // }
 }

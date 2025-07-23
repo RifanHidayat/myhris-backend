@@ -1,6 +1,5 @@
 {
   "singleQuote": true,
   "trailingComma": "all",
-  "endOfLine": "crlf",
-  "files.eol": "\r\n"
+  "endOfLine": "crlf"
 }
