@@ -25,7 +25,7 @@ export class DailyTaskListService {
       convertBulan = bulan;
     }
     let namaDatabaseDynamic = `${database}_hrm${convertYear}${convertBulan}`;
-    const lastDay = new Date(tahun, parseInt(convertBulan), 0).getDate();
+    const lastDay = new Date(Number(tahun), Number(convertBulan), 0).getDate();
     const startPeriode = `${tahun}-${bulan}-01`;
     const endPeriode = `${tahun}-${bulan}-${lastDay}`;
     const array1 = startPeriode.split('-');
@@ -47,15 +47,15 @@ export class DailyTaskListService {
       await conn.beginTransaction();
       const queryCek = `SELECT tgl_buat FROM daily_task WHERE em_id = ? ORDER BY tgl_buat DESC LIMIT 1`;
       const [cekdata] = await conn.query(queryCek, [em_id]);
-      let tglFinal;
+      let tglFinal: string;
       if (cekdata.length > 0 && cekdata[0].tgl_buat) {
-        const tglBuat = cekdata[0].tgl_buat.toISOString().split('T')[0];
+        const tglBuat = cekdata[0].tgl_buat instanceof Date ? cekdata[0].tgl_buat.toISOString().split('T')[0] : cekdata[0].tgl_buat;
         const today = new Date();
         const tglBuatDate = new Date(tglBuat);
         if (tglBuatDate > today) {
           tglFinal = tglBuat;
         } else {
-          tglFinal = new Date().toISOString().split('T')[0];
+          tglFinal = today.toISOString().split('T')[0];
         }
       } else {
         tglFinal = new Date().toISOString().split('T')[0];
@@ -70,7 +70,9 @@ export class DailyTaskListService {
       };
     } catch (error) {
       if (conn) await conn.rollback();
-      throw new InternalServerErrorException('Gagal dapatkan data AllDailyTask: ' + error.message);
+      throw new InternalServerErrorException(
+        'Gagal dapatkan data AllDailyTask: ' + error.message,
+      );
     } finally {
       if (conn) conn.release();
     }

@@ -1,12 +1,19 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
-interface DailyTasksStoreDto {
+interface DailyTasksUpdateDto {
   database: string;
   em_id: string;
   atten_date: string;
-  list_task: Array<{ task: string; judul: string; status: string; level: number; tgl_finish: string }>;
+  list_task: Array<{
+    task: string;
+    judul: string;
+    status: string;
+    level: number;
+    tgl_finish: string;
+    id?: number;
+  }>;
+  id: string;
   status: string;
-  id?: string;
 }
 
 function formatDate(date: string): string {
@@ -16,14 +23,15 @@ function formatDate(date: string): string {
 }
 
 @Injectable()
-export class DailyTasksStoreService {
-  async insertDailyTask(dto: DailyTasksStoreDto): Promise<any> {
+export class DailyTasksUpdateService {
+  async updateDailyTask(dto: DailyTasksUpdateDto): Promise<any> {
     const model = require('../../../common/model');
     const database = dto.database;
     const em_id = dto.em_id;
     const array = dto.atten_date.split('-');
     const listTask = dto.list_task;
     const attenDate = dto.atten_date;
+    const id = dto.id;
     const status = dto.status;
     const tahun = `${array[0]}`;
     const convertYear = tahun.substring(2, 4);
@@ -35,11 +43,28 @@ export class DailyTasksStoreService {
       conn = await connection.getConnection();
       await conn.beginTransaction();
       const [cekDaily] = await conn.query(
-        `SELECT id FROM daily_task WHERE tgl_buat = ? AND em_id = ?`,
-        [attenDate, em_id]
+        `SELECT * FROM daily_task WHERE em_id = ? AND id = ?`,
+        [em_id, id],
       );
       if (cekDaily.length > 0) {
-        throw new InternalServerErrorException(`Tugas di tanggal ${attenDate} ini sudah tersedia`);
+        const taskId = cekDaily[0].id;
+        const queryTask = `UPDATE daily_task SET em_id = ?, tgl_buat = ?, status_pengajuan = ? WHERE id = ?`;
+        const queryDetail = `INSERT INTO daily_task_detail (judul, rincian, tgl_finish, daily_task_id, status, level) VALUES (?, ?, ?, ?, ?, ?)`;
+        await conn.query(queryTask, [em_id, attenDate, status, taskId]);
+        const deleteQuery = `DELETE FROM daily_task_detail WHERE daily_task_id = ?`;
+        await conn.query(deleteQuery, [taskId]);
+        for (const item of listTask) {
+          const { task, judul, status, level, tgl_finish } = item;
+          const tanggal = formatDate(tgl_finish);
+          await conn.query(queryDetail, [
+            judul,
+            task,
+            tanggal,
+            taskId,
+            status.toString(),
+            level,
+          ]);
+        }
       } else {
         const queryTask = `INSERT INTO daily_task (em_id, tgl_buat, status_pengajuan) VALUES (?, ?, ?)`;
         const queryDetail = `INSERT INTO daily_task_detail (judul, rincian, tgl_finish, daily_task_id, status, level) VALUES (?, ?, ?, ?, ?, ?)`;
@@ -48,7 +73,14 @@ export class DailyTasksStoreService {
         for (const item of listTask) {
           const { task, judul, status, level, tgl_finish } = item;
           const tanggal = formatDate(tgl_finish);
-          await conn.query(queryDetail, [judul, task, tanggal, taskId, status.toString(), level]);
+          await conn.query(queryDetail, [
+            judul,
+            task,
+            tanggal,
+            taskId,
+            status.toString(),
+            level,
+          ]);
         }
       }
       await conn.commit();
@@ -58,9 +90,11 @@ export class DailyTasksStoreService {
       };
     } catch (error) {
       if (conn) await conn.rollback();
-      throw new InternalServerErrorException('Gagal menambahkan data: ' + error.message);
+      throw new InternalServerErrorException(
+        'Gagal menambahkan data: ' + error.message,
+      );
     } finally {
       if (conn) conn.release();
     }
   }
-} 
+}

@@ -10,4 +10,4 @@ export class PayslipsController {
     // TODO: Implementasi pengambilan data slip gaji
     return [];
   }
-} 
+}

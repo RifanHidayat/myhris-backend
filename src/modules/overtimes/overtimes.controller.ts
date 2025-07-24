@@ -1,11 +1,14 @@
-import { Controller, Get, Param, Headers, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Headers, UseGuards, Body, Put } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { OvertimesUpdateService } from './services/overtimes-update.service';
 
 /**
  * Controller untuk menu Lembur
  */
 @Controller('overtimes')
 export class OvertimesController {
+  constructor(private readonly overtimesUpdateService: OvertimesUpdateService) {}
+
   @UseGuards(JwtAuthGuard)
   @Get('')
   async getAll(
@@ -49,4 +52,15 @@ export class OvertimesController {
     // TODO: Implementasi pengambilan detail lembur by ID
     return { id };
   }
-} 
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() dto: any,
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+  ): Promise<any> {
+    return this.overtimesUpdateService.updateLembur({ ...dto, id, database: tenant });
+  }
+}

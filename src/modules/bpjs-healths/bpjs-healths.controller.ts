@@ -10,4 +10,4 @@ export class BpjsHealthsController {
     // TODO: Implementasi pengambilan data BPJS Kesehatan
     return [];
   }
-} 
+}

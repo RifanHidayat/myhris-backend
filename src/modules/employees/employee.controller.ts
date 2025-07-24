@@ -1,4 +1,11 @@
-import { Controller, Body, Headers, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Body,
+  Headers,
+  Get,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { EmployeeDetailService } from './services/employee-detail-service';
 import { EmployeeListService } from './services/employee-list-service';
@@ -48,7 +55,7 @@ export class EmployeeController {
   @UseGuards(JwtAuthGuard)
   @Post('last-attendance')
   async viewLastAttendance(@Body() dto: any): Promise<any> {
-    return this.employeeLastAttendanceService.viewLastAttendance(dto);
+    return this.employeeLastAttendanceService.viewLastAbsen(dto);
   }
 }
 //   @Post('detail')

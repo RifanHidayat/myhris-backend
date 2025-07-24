@@ -20,7 +20,9 @@ export class RequestAttendanceDeleteService {
     const knex = this.dbService.getConnection(tenant);
     try {
       const trx = await knex.transaction();
-      await trx(`${dbName}.emp_labor`).where({ em_id: emId, nomor_ajuan }).update({ status_transaksi: 0 });
+      await trx(`${dbName}.emp_labor`)
+        .where({ em_id: emId, nomor_ajuan })
+        .update({ status_transaksi: 0 });
       await trx.commit();
       return {
         status: true,

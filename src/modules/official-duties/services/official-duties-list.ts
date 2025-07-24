@@ -1,90 +1,62 @@
-emp_leave_load_dinasluar(req, res) {
-    console.log("-----hoistory dinas luar dengan periode----------");
-    var database = req.query.database;
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { DbService } from '../../../config/database.service';
 
-    var em_id = req.body.em_id;
-    var bulan = req.body.bulan;
-    var tahun = req.body.tahun;
+@Injectable()
+export class OfficialDutiesListService {
+  constructor(private readonly dbService: DbService) {}
 
+  async empLeaveLoadDinasLuar(params: {
+    database: string;
+    em_id: string;
+    bulan: string;
+    tahun: string;
+    startPeriode?: string;
+    endPeriode?: string;
+  }): Promise<any> {
+    const { database, em_id, bulan, tahun, startPeriode, endPeriode } = params;
     const convertYear = tahun.substring(2, 4);
-    var convertBulan;
-    if (bulan.length == 1) {
-      convertBulan = bulan <= 9 ? `0${bulan}` : bulan;
-    } else {
-      convertBulan = bulan;
-    }
+    const convertBulan = bulan.length === 1 ? `0${bulan}` : bulan;
     const namaDatabaseDynamic = `${database}_hrm${convertYear}${convertBulan}`;
-
-    const configDynamic = {
-      multipleStatements: true,
-      host: ipServer, //my${database}.siscom.id (ip local)
-      user: "pro",
-      password: "Siscom3519",
-      database: `${namaDatabaseDynamic}`,
-      connectionLimit: 1000,
-      connectTimeout: 60 * 60 * 1000,
-      acquireTimeout: 60 * 60 * 1000,
-      timeout: 60 * 60 * 1000,
-    };
-    const mysql = require("mysql");
-    const poolDynamic = mysql.createPool(configDynamic);
-
-    var startPeriode =
-      req.query.start_periode == undefined
-        ? "2024-02-03"
-        : req.query.start_periode;
-    var endPeriode =
-      req.query.end_periode == undefined ? "2024-02-03" : req.query.end_periode;
-    var array1 = startPeriode.split("-");
-    var array2 = endPeriode.split("-");
-
-    const startPeriodeDynamic = `${database}_hrm${array1[0].substring(2, 4)}${
-      array1[1]
-    }`;
-    const endPeriodeDynamic = `${database}_hrm${array2[0].substring(2, 4)}${
-      array2[1]
-    }`;
-
-    let date1 = new Date(startPeriode);
-    let date2 = new Date(endPeriode);
-
+    const _startPeriode = startPeriode || '2024-02-03';
+    const _endPeriode = endPeriode || '2024-02-03';
+    const array1 = _startPeriode.split('-');
+    const array2 = _endPeriode.split('-');
+    const startPeriodeDynamic = `${database}_hrm${array1[0].substring(2, 4)}${array1[1]}`;
+    const endPeriodeDynamic = `${database}_hrm${array2[0].substring(2, 4)}${array2[1]}`;
+    let date1 = new Date(_startPeriode);
+    let date2 = new Date(_endPeriode);
     const montStart = date1.getMonth() + 1;
     const monthEnd = date2.getMonth() + 1;
-
-    var url = `SELECT * FROM ${namaDatabaseDynamic}.emp_leave WHERE em_id='${em_id}' AND ajuan='4' AND status_transaksi='1' AND atten_date>='${startPeriode}' AND atten_date<='${endPeriode}' ORDER BY id DESC;`;
-
+    let query = `SELECT * FROM ${namaDatabaseDynamic}.emp_leave WHERE em_id=? AND ajuan='4' AND status_transaksi='1' AND atten_date>=? AND atten_date<=? ORDER BY id DESC`;
+    let queryParams: any[] = [em_id, _startPeriode, _endPeriode];
     if (montStart < monthEnd || date1.getFullYear() < date2.getFullYear()) {
-      url = `
-      SELECT emp_leave.id as idd,emp_leave.* FROM ${startPeriodeDynamic}.emp_leave WHERE em_id='${em_id}' AND ajuan='4' AND status_transaksi='1' AND atten_date>='${startPeriode}' AND atten_date<='${endPeriode}' 
-
-      UNION ALL
-
-      SELECT emp_leave. id as  idd,emp_leave.* FROM ${endPeriodeDynamic}.emp_leave WHERE em_id='${em_id}' AND ajuan='4' AND status_transaksi='1' AND atten_date>='${startPeriode}' AND atten_date<='${endPeriode}'
-      
-      ORDER BY idd DESC
+      query = `
+        SELECT emp_leave.id as idd,emp_leave.* FROM ${startPeriodeDynamic}.emp_leave WHERE em_id=? AND ajuan='4' AND status_transaksi='1' AND atten_date>=? AND atten_date<=? 
+        UNION ALL
+        SELECT emp_leave.id as idd,emp_leave.* FROM ${endPeriodeDynamic}.emp_leave WHERE em_id=? AND ajuan='4' AND status_transaksi='1' AND atten_date>=? AND atten_date<=?
+        ORDER BY idd DESC
       `;
+      queryParams = [em_id, _startPeriode, _endPeriode, em_id, _startPeriode, _endPeriode];
     }
-
-    console.log(url);
-
-    poolDynamic.getConnection(function (err, connection) {
-      if (err) {
-        res.send({
-          status: false,
-          message: "Database tidak di temukan",
-          data: [],
-        });
-      } else {
-        connection.query(url, function (error, results) {
-          connection.release();
-          if (error != null) console.log(error);
-          res.send({
-            status: true,
-            message: "Berhasil ambil data!",
-            jumlah_data: results.length,
-            data: results,
-          });
-        });
+    const knex = this.dbService.getConnection(database);
+    try {
+      const trx = await knex.transaction();
+      const results = await trx.raw(query, queryParams);
+      await trx.commit();
+      let rows: any[] = [];
+      if ('rows' in results && Array.isArray(results.rows)) {
+        rows = results.rows;
+      } else if (Array.isArray(results) && Array.isArray(results[0])) {
+        rows = results[0];
       }
-    });
-  },
+      return {
+        status: true,
+        message: 'Berhasil ambil data!',
+        jumlah_data: rows.length,
+        data: rows,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Database error: ' + error.message);
+    }
+  }
+}

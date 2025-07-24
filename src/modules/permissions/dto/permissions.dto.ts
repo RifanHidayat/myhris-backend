@@ -3,4 +3,4 @@
  */
 export class PermissionsDto {
   // Tambahkan properti sesuai kebutuhan
-} 
+}

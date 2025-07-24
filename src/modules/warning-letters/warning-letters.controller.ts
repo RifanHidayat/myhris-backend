@@ -10,4 +10,4 @@ export class WarningLettersController {
     // TODO: Implementasi pengambilan data Surat Peringatan
     return [];
   }
-} 
+}

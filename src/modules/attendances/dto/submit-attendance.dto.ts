@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsNumber, IsDateString, IsNotEmpty, IsDefined } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsDateString,
+  IsNotEmpty,
+  IsDefined,
+} from 'class-validator';
 
 export class SubmitAttendanceDto {
   @IsString()
@@ -62,4 +69,4 @@ export class SubmitAttendanceDto {
   end_time?: string;
 
   // Tambahkan field lain sesuai kebutuhan dari body request
-} 
+}

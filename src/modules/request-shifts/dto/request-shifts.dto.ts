@@ -3,4 +3,4 @@
  */
 export class RequestShiftsDto {
   // Tambahkan properti sesuai kebutuhan
-} 
+}

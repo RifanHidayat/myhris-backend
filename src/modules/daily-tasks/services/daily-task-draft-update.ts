@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  BadRequestException,
+} from '@nestjs/common';
 
 interface UpdateDraftDto {
   database: string;
@@ -27,10 +31,12 @@ export class DailyTaskDraftUpdateService {
       await conn.beginTransaction();
       const [cekDaily] = await conn.query(
         `SELECT * FROM daily_task WHERE em_id = ? AND tgl_buat = ? AND id != ?`,
-        [em_id, atten_date, id]
+        [em_id, atten_date, id],
       );
       if (cekDaily.length > 0) {
-        throw new BadRequestException(`Tugas di tanggal ${atten_date} ini sudah tersedia`);
+        throw new BadRequestException(
+          `Tugas di tanggal ${atten_date} ini sudah tersedia`,
+        );
       } else {
         const taskId = id.toString();
         const queryTask = `UPDATE daily_task SET em_id = ?, tgl_buat = ?, status_pengajuan = ? WHERE id = ?`;
@@ -41,7 +47,14 @@ export class DailyTaskDraftUpdateService {
         for (const item of list_task) {
           const { task, judul, status, level, tgl_finish } = item;
           const tanggal = this.formatDate(tgl_finish);
-          await conn.query(queryDetail, [judul, task, tanggal, taskId, status.toString(), level]);
+          await conn.query(queryDetail, [
+            judul,
+            task,
+            tanggal,
+            taskId,
+            status.toString(),
+            level,
+          ]);
         }
       }
       await conn.commit();
@@ -51,7 +64,9 @@ export class DailyTaskDraftUpdateService {
       };
     } catch (error) {
       if (conn) await conn.rollback();
-      throw new InternalServerErrorException('Gagal menambahkan data: ' + error.message);
+      throw new InternalServerErrorException(
+        'Gagal menambahkan data: ' + error.message,
+      );
     } finally {
       if (conn) conn.release();
     }

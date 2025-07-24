@@ -9,6 +9,10 @@ import { DbService } from '../../config/database.service';
 @Module({
   imports: [ConfigModule],
   controllers: [EmployeeController],
-  providers: [AttendanceListService, SubmitAttendanceService, SubmitAttendanceBreakService],
+  providers: [
+    AttendanceListService,
+    SubmitAttendanceService,
+    SubmitAttendanceBreakService,
+  ],
 })
 export class AttendanceModule {}

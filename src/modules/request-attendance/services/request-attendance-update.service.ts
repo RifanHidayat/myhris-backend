@@ -22,7 +22,9 @@ export class RequestAttendanceUpdateService {
     const knex = this.dbService.getConnection(tenant);
     try {
       const trx = await knex.transaction();
-      await trx(`${dbName}.emp_labor`).where({ em_id: emId, nomor_ajuan }).update({ status: status || 'CANCELLED' });
+      await trx(`${dbName}.emp_labor`)
+        .where({ em_id: emId, nomor_ajuan })
+        .update({ status: status || 'CANCELLED' });
       await trx.commit();
       return {
         status: true,
@@ -32,4 +34,4 @@ export class RequestAttendanceUpdateService {
       throw new InternalServerErrorException('Gagal update data');
     }
   }
-} 
+}

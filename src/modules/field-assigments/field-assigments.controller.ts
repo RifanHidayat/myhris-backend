@@ -21,4 +21,4 @@ export class FieldAssigmentsController {
   async store(@Body() body: any): Promise<any> {
     return this.storeService.store(body);
   }
-} 
+}

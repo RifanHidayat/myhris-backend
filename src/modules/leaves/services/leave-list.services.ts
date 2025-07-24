@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  BadRequestException,
+} from '@nestjs/common';
 
 interface LeavesListDto {
   database: string;
@@ -14,6 +18,9 @@ export class LeavesListService {
   async historyCuti(dto: LeavesListDto): Promise<any> {
     // Implementasi logic utama dari req/res ke DTO dan return value
     // ... (implementasi logic sesuai file asli, gunakan exception untuk error)
-    return { status: true, message: 'Refactor success (dummy, implement logic as needed)' };
+    return {
+      status: true,
+      message: 'Refactor success (dummy, implement logic as needed)',
+    };
   }
 }

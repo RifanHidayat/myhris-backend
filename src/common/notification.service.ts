@@ -1,11 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { FcmService } from './fcm.service';
 import { DbService } from '../config/database.service';
-import {
-  formatDbName,
-  getDateNow,
-  databaseMaster,
-} from './utils';
+import { formatDbName, getDateNow, databaseMaster } from './utils';
 
 @Injectable()
 export class NotificationService {
@@ -33,7 +29,10 @@ export class NotificationService {
     this.logger.log(`Masuk ke fungsi notifikasi ${databasePeriode}`);
     this.logger.log(`emIds: ${emIds}`);
 
-    const listData = emIds.toString().split(',').filter(id => id.trim());
+    const listData = emIds
+      .toString()
+      .split(',')
+      .filter((id) => id.trim());
     const knex = this.dbService.getConnection(databaseMasterName);
 
     try {
@@ -109,7 +108,10 @@ export class NotificationService {
     this.logger.log(`Masuk ke fungsi notifikasi approval ${databasePeriode}`);
     this.logger.log(`emIds: ${emIds}`);
 
-    const listData = emIds.toString().split(',').filter(id => id.trim());
+    const listData = emIds
+      .toString()
+      .split(',')
+      .filter((id) => id.trim());
     const knex = this.dbService.getConnection(databaseMasterName);
 
     try {
@@ -183,15 +185,20 @@ export class NotificationService {
     databaseMasterName: string,
     description: string,
   ): Promise<void> {
-    this.logger.log(`Initializing global notification process ${databasePeriode}`);
+    this.logger.log(
+      `Initializing global notification process ${databasePeriode}`,
+    );
     const knex = this.dbService.getConnection(databaseMasterName);
-    const listData = emIds.toString().split(',').filter(id => id.trim());
+    const listData = emIds
+      .toString()
+      .split(',')
+      .filter((id) => id.trim());
 
     try {
       const trx = await knex.transaction();
 
-      const employeeQueries = listData.map(emId =>
-        trx('employee').where('em_id', emId.trim()).first()
+      const employeeQueries = listData.map((emId) =>
+        trx('employee').where('em_id', emId.trim()).first(),
       );
 
       const employees = await Promise.all(employeeQueries);
@@ -212,7 +219,7 @@ export class NotificationService {
           };
 
           insertQueries.push(
-            trx(`${databasePeriode}.notifikasi`).insert(insertData)
+            trx(`${databasePeriode}.notifikasi`).insert(insertData),
           );
 
           // Kirim notifikasi FCM global
@@ -230,7 +237,9 @@ export class NotificationService {
 
       await Promise.all(insertQueries);
       await trx.commit();
-      this.logger.log('Global notification transaction completed successfully!');
+      this.logger.log(
+        'Global notification transaction completed successfully!',
+      );
     } catch (error) {
       this.logger.error('Error during global notification transaction:', error);
       throw error;
@@ -267,7 +276,10 @@ export class NotificationService {
         throw new Error('Data pegawai pengajuan tidak ditemukan');
       }
 
-      const listData = emIds.toString().split(',').filter(id => id.trim());
+      const listData = emIds
+        .toString()
+        .split(',')
+        .filter((id) => id.trim());
 
       for (const emId of listData) {
         // Mendapatkan data karyawan yang akan menerima notifikasi
@@ -341,7 +353,7 @@ export class NotificationService {
 
     const listData = emIds.toString().split(',').filter(Boolean);
     this.logger.log(`Processing ${listData.length} employees`);
-    
+
     const knex = this.dbService.getConnection(databaseMasterName);
 
     try {
@@ -357,8 +369,12 @@ export class NotificationService {
           continue;
         }
 
-        const salutation = employee.em_gender === 'PRIA' ? 'Bapak' : 
-                          employee.em_gender === 'Wanita' ? 'Ibu' : '';
+        const salutation =
+          employee.em_gender === 'PRIA'
+            ? 'Bapak'
+            : employee.em_gender === 'Wanita'
+              ? 'Ibu'
+              : '';
 
         let deskripsi = `${nameSp} ${namaPengajuan} dengan nomor ${nomorAjuan}`;
 
@@ -394,10 +410,15 @@ export class NotificationService {
       }
 
       await trx.commit();
-      this.logger.log('Attendance warning notification transaction completed successfully!');
+      this.logger.log(
+        'Attendance warning notification transaction completed successfully!',
+      );
     } catch (error) {
-      this.logger.error('Error during attendance warning notification processing:', error);
+      this.logger.error(
+        'Error during attendance warning notification processing:',
+        error,
+      );
       throw error;
     }
   }
-} 
+}

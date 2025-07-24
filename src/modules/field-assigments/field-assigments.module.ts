@@ -7,4 +7,4 @@ import { FieldAssigmentsStoreService } from './services/field-assigments-store.s
   controllers: [FieldAssigmentsController],
   providers: [FieldAssigmentsListService, FieldAssigmentsStoreService],
 })
-export class FieldAssigmentsModule {} 
+export class FieldAssigmentsModule {}

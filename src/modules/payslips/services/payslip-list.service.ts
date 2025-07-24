@@ -26,7 +26,9 @@ export class PayslipListService {
     const poolDynamic = mysql.createPool(configDynamic);
     const connection = await poolDynamic.getConnection();
     try {
-      const [results] = await connection.query(`SELECT * FROM ${database}_hrm.emp_salary${tahun} WHERE em_id='${em_id}' AND payroll='Y' ORDER BY initial`);
+      const [results] = await connection.query(
+        `SELECT * FROM ${database}_hrm.emp_salary${tahun} WHERE em_id='${em_id}' AND payroll='Y' ORDER BY initial`,
+      );
       let list_pendapatan: any[] = [];
       let list_pemotongan: any[] = [];
       for (const el of results) {
@@ -35,9 +37,15 @@ export class PayslipListService {
           if (el[`value${index}`] === '' || el[`value${index}`] == null) {
             el[`value${index}`] = 0;
           } else {
-            const [salaryMobile] = await connection.query(`SELECT * FROM ${database}_hrm${tahun.toString().slice(-2)}${index}.emp_salary_mobile WHERE em_id='${em_id}'`);
+            const [salaryMobile] = await connection.query(
+              `SELECT * FROM ${database}_hrm${tahun.toString().slice(-2)}${index}.emp_salary_mobile WHERE em_id='${em_id}'`,
+            );
             if (salaryMobile.length > 0) {
-              el[`value${index}`] = this.decryptText(el[`value${index}`], '', '');
+              el[`value${index}`] = this.decryptText(
+                el[`value${index}`],
+                '',
+                '',
+              );
             } else {
               el[`value${index}`] = 0;
             }
@@ -62,7 +70,11 @@ export class PayslipListService {
     }
   }
 
-  private decryptText(textToDecrypt: string, keyInput: string, ivInput: string): string {
+  private decryptText(
+    textToDecrypt: string,
+    keyInput: string,
+    ivInput: string,
+  ): string {
     const algorithm = 'aes-256-cbc';
     const iv = Buffer.from('1983759874219020', 'utf8');
     let key: Buffer;
@@ -71,11 +83,15 @@ export class PayslipListService {
     } else {
       key = Buffer.from(keyInput, 'utf8');
       if (key.length !== 32) {
-        throw new Error(`Key length invalid: expected 32 bytes but got ${key.length}`);
+        throw new Error(
+          `Key length invalid: expected 32 bytes but got ${key.length}`,
+        );
       }
     }
     if (iv.length !== 16) {
-      throw new Error('IV length invalid: expected 16 bytes but got ' + iv.length);
+      throw new Error(
+        'IV length invalid: expected 16 bytes but got ' + iv.length,
+      );
     }
     const decipher = crypto.createDecipheriv(algorithm, key, iv);
     let decrypted = decipher.update(textToDecrypt, 'base64', 'utf8');

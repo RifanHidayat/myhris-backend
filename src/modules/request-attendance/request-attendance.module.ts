@@ -17,4 +17,4 @@ import { CommonModule } from '../../common/common.module';
     DbService,
   ],
 })
-export class RequestAttendanceModule {} 
+export class RequestAttendanceModule {}

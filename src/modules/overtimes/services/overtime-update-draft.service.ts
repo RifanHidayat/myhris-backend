@@ -4,7 +4,14 @@ interface OvertimeUpdateDraftDto {
   database: string;
   em_id: string;
   atten_date: string;
-  list_task: Array<{ task: string; judul: string; status: string; level: number; tgl_finish: string; id?: number }>;
+  list_task: Array<{
+    task: string;
+    judul: string;
+    status: string;
+    level: number;
+    tgl_finish: string;
+    id?: number;
+  }>;
   id: string;
   status: string;
 }
@@ -35,12 +42,14 @@ export class OvertimeUpdateDraftService {
       await conn.beginTransaction();
       const script = `UPDATE ${namaDatabaseDynamic}.emp_labor SET ? WHERE id='${id}'`;
       await conn.query(script, [dto]);
-      await conn.query(`DELETE FROM ${namaDatabaseDynamic}.emp_labor_task WHERE emp_labor_id = ${id}`);
+      await conn.query(
+        `DELETE FROM ${namaDatabaseDynamic}.emp_labor_task WHERE emp_labor_id = ${id}`,
+      );
       for (const item of listTask) {
         const { task, judul, status, level, tgl_finish } = item;
         await conn.query(
           `INSERT INTO ${namaDatabaseDynamic}.emp_labor_task (task,persentase,emp_labor_id,level) VALUES(?, '0', ?, ?)`,
-          [task, id, level]
+          [task, id, level],
         );
       }
       await conn.commit();
@@ -48,14 +57,15 @@ export class OvertimeUpdateDraftService {
         status: true,
         message: 'Insert to draft successfully',
       };
-    } catch (e) {
+    } catch (e: any) {
       if (conn) {
         await conn.rollback();
       }
-      throw new InternalServerErrorException('Gagal update draft lembur: ' + e.message);
+      throw new InternalServerErrorException(
+        'Gagal update draft lembur: ' + (e?.message ?? e)
+      );
     } finally {
       if (conn) await conn.release();
     }
   }
 }
-  

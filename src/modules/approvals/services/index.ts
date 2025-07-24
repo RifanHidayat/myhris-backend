@@ -7,4 +7,4 @@ export * from './approval-attendance.service';
 export * from './approval-wfh.service';
 export * from './approval-loan.service';
 export * from './approval-verbal-warning.service';
-export * from './approval-warning-letter.service'; 
+export * from './approval-warning-letter.service';

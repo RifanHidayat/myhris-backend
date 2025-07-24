@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 interface RequestShiftsUpdateDto {
   database: string;
@@ -27,8 +31,10 @@ export class RequestShiftsUpdateService {
   async edit(dto: RequestShiftsUpdateDto): Promise<any> {
     const { database, tgl_ajuan, id, status_transaksi, ...bodyValue } = dto;
     const array = tgl_ajuan.split('-');
-    bodyValue.work_id_old = bodyValue.work_id_old === '' ? 0 : bodyValue.work_id_old;
-    bodyValue.work_id_new = bodyValue.work_id_new === '' ? 0 : bodyValue.work_id_new;
+    bodyValue.work_id_old =
+      bodyValue.work_id_old === '' ? 0 : bodyValue.work_id_old;
+    bodyValue.work_id_new =
+      bodyValue.work_id_new === '' ? 0 : bodyValue.work_id_new;
     const tahun = `${array[0]}`;
     const convertYear = tahun.substring(2, 4);
     let convertBulan: string;
@@ -40,7 +46,9 @@ export class RequestShiftsUpdateService {
     const namaDatabaseDynamic = `${database}_hrm${convertYear}${convertBulan}`;
     let conn;
     try {
-      conn = await (await model.createConnection1(`${database}_hrm`)).getConnection();
+      conn = await (
+        await model.createConnection1(`${database}_hrm`)
+      ).getConnection();
       await conn.beginTransaction();
       const query = `UPDATE ${namaDatabaseDynamic}.emp_labor SET ? WHERE id = '${id}'`;
       if (status_transaksi == 0) {
@@ -49,7 +57,7 @@ export class RequestShiftsUpdateService {
         await conn.commit();
         return {
           status: true,
-          message: "Succesfully Delete Shift",
+          message: 'Succesfully Delete Shift',
         };
       } else {
         const body = { ...bodyValue };
@@ -57,7 +65,7 @@ export class RequestShiftsUpdateService {
         await conn.commit();
         return {
           status: true,
-          message: "Succesfuly Edit shift",
+          message: 'Succesfuly Edit shift',
         };
       }
     } catch (e) {
@@ -69,4 +77,4 @@ export class RequestShiftsUpdateService {
       if (conn) await conn.release();
     }
   }
-} 
+}

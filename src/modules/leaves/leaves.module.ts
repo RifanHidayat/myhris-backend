@@ -7,4 +7,4 @@ import { LeavesStoreService } from './services/leaves-store.service';
   controllers: [LeavesController],
   providers: [LeavesListService, LeavesStoreService],
 })
-export class LeavesModule {} 
+export class LeavesModule {}

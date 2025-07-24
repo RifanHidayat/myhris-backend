@@ -21,4 +21,4 @@ export class LeavesController {
   async store(@Body() body: any): Promise<any> {
     return this.storeService.store(body);
   }
-} 
+}

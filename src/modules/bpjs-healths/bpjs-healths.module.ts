@@ -4,4 +4,4 @@ import { BpjsHealthsController } from './bpjs-healths.controller';
 @Module({
   controllers: [BpjsHealthsController],
 })
-export class BpjsHealthsModule {} 
+export class BpjsHealthsModule {}

@@ -10,4 +10,4 @@ export class BpjsEmployeemnetsController {
     // TODO: Implementasi pengambilan data BPJS Ketenagakerjaan
     return [];
   }
-} 
+}

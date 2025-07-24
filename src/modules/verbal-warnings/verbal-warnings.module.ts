@@ -4,4 +4,4 @@ import { VerbalWarningsController } from './verbal-warnings.controller';
 @Module({
   controllers: [VerbalWarningsController],
 })
-export class VerbalWarningsModule {} 
+export class VerbalWarningsModule {}

@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  BadRequestException,
+} from '@nestjs/common';
 
 interface FieldAssigmentsListDto {
   database: string;
@@ -16,7 +20,15 @@ const model = require('../../../common/model');
 @Injectable()
 export class FieldAssigmentsListService {
   async list(dto: FieldAssigmentsListDto): Promise<any> {
-    const { database, em_id, bulan, tahun, branch_id, start_periode, end_periode } = dto;
+    const {
+      database,
+      em_id,
+      bulan,
+      tahun,
+      branch_id,
+      start_periode,
+      end_periode,
+    } = dto;
     const convertYear = tahun.substring(2, 4);
     let convertBulan;
     if (bulan.length === 1) {
@@ -41,7 +53,8 @@ export class FieldAssigmentsListService {
       conn = await connection.getConnection();
       await conn.beginTransaction();
       let url;
-      if (true) { // Sederhanakan, logika bisa dioptimasi
+      if (true) {
+        // Sederhanakan, logika bisa dioptimasi
         url = `SELECT emp_labor.status as leave_status, emp_labor.*,overtime.name as type,overtime.dinilai FROM ${startPeriodeDynamic}.emp_labor LEFT JOIN ${database}_hrm.overtime ON overtime.id=emp_labor.typeId WHERE em_id='${em_id}' AND status_transaksi=1 AND (tgl_ajuan>='${startPeriode}' AND tgl_ajuan<='${endPeriode}') ORDER BY id DESC`;
         if (montStart < monthEnd || date1.getFullYear() < date2.getFullYear()) {
           url = `SELECT emp_labor.id as idd, emp_labor.status as leave_status, ${startPeriodeDynamic}.emp_labor.*,overtime.name as type ,overtime.dinilai FROM ${startPeriodeDynamic}.emp_labor LEFT JOIN ${database}_hrm.overtime ON overtime.id=emp_labor.typeId WHERE em_id='${em_id}' AND status_transaksi=1  AND (tgl_ajuan>='${startPeriode}' AND tgl_ajuan<='${endPeriode}')  AND branch_id='${branch_id}'  UNION ALL SELECT emp_labor.id as idd, emp_labor.status as leave_status, ${endPeriodeDynamic}.emp_labor.*,overtime.name as type ,overtime.dinilai FROM ${endPeriodeDynamic}.emp_labor LEFT JOIN ${database}_hrm.overtime ON overtime.id=emp_labor.typeId WHERE em_id='${em_id}' AND status_transaksi=1 AND ( tgl_ajuan<='${endPeriode}')  AND branch_id='${branch_id}' ORDER BY idd`;

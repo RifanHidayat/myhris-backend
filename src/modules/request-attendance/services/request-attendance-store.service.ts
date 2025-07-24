@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { DbService } from '../../../config/database.service';
 import { NotificationService } from '../../../common/notification.service';
 import { formatDbName, getDateNow, databaseMaster } from 'src/common/utils';
@@ -29,7 +33,9 @@ export class RequestAttendanceStoreService {
     try {
       const trx = await knex.transaction();
       // Get employee data for notification
-      const employee = await trx(`${database}.employee`).where('em_id', emId).first();
+      const employee = await trx(`${database}.employee`)
+        .where('em_id', emId)
+        .first();
       if (!employee) {
         throw new NotFoundException('Employee not found');
       }
@@ -42,12 +48,19 @@ export class RequestAttendanceStoreService {
         created_at: new Date(),
         updated_at: new Date(),
       };
-      const [insertedId] = await trx(`${databasePerode}.request_attendance`).insert(insertData);
+      const [insertedId] = await trx(
+        `${databasePerode}.request_attendance`,
+      ).insert(insertData);
       // Send notification to approvers
       if (employee.dep_id) {
-        const approvers = await trx(`${database}.employee`).where('dep_id', employee.dep_id).where('em_controlaccess', 'Y').select('em_id');
+        const approvers = await trx(`${database}.employee`)
+          .where('dep_id', employee.dep_id)
+          .where('em_controlaccess', 'Y')
+          .select('em_id');
         if (approvers.length > 0) {
-          const approverIds = approvers.map(approver => approver.em_id).join(',');
+          const approverIds = approvers
+            .map((approver) => approver.em_id)
+            .join(',');
           await this.notificationService.insertNotification(
             approverIds,
             'Permintaan Absensi Baru',
@@ -71,7 +84,9 @@ export class RequestAttendanceStoreService {
         },
       };
     } catch (error) {
-      throw new InternalServerErrorException('Terjadi kesalahan saat membuat permintaan absensi');
+      throw new InternalServerErrorException(
+        'Terjadi kesalahan saat membuat permintaan absensi',
+      );
     }
   }
 }

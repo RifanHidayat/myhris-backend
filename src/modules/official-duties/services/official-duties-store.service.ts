@@ -45,7 +45,9 @@ export class OfficialDutiesStoreService {
     try {
       conn = await connection.getConnection();
       await conn.beginTransaction();
-      const [results] = await conn.query(`SELECT * FROM ${namaDatabaseDynamic}.emp_leave WHERE ajuan='4'`);
+      const [results] = await conn.query(
+        `SELECT * FROM ${namaDatabaseDynamic}.emp_leave WHERE ajuan='4'`,
+      );
       let nomor;
       if (results.length > 0) {
         const text = results[0]['nomor_ajuan'];
@@ -56,8 +58,12 @@ export class OfficialDutiesStoreService {
       const nomorStr = String(nomor).padStart(4, '0');
       insertData.nomor_ajuan = `DL20${convertYear}${convertBulan}` + nomorStr;
       await conn.query(script, [insertData]);
-      const [transaksi] = await conn.query(`SELECT * FROM ${namaDatabaseDynamic}.emp_leave WHERE nomor_ajuan='${insertData.nomor_ajuan}'`);
-      const [employee] = await conn.query(`SELECT * FROM ${databaseMaster}.employee WHERE em_id='${insertData.em_id}'`);
+      const [transaksi] = await conn.query(
+        `SELECT * FROM ${namaDatabaseDynamic}.emp_leave WHERE nomor_ajuan='${insertData.nomor_ajuan}'`,
+      );
+      const [employee] = await conn.query(
+        `SELECT * FROM ${databaseMaster}.employee WHERE em_id='${insertData.em_id}'`,
+      );
       utility.insertNotifikasi(
         employee[0].em_report_to,
         'Approval Dinas Luar',
@@ -67,7 +73,7 @@ export class OfficialDutiesStoreService {
         transaksi[0].nomor_ajuan,
         employee[0].full_name,
         namaDatabaseDynamic,
-        databaseMaster
+        databaseMaster,
       );
       await conn.commit();
       return {
@@ -79,9 +85,11 @@ export class OfficialDutiesStoreService {
       if (conn) {
         await conn.rollback();
       }
-      throw new InternalServerErrorException('Gagal ambil data dinas resmi: ' + e.message);
+      throw new InternalServerErrorException(
+        'Gagal ambil data dinas resmi: ' + e.message,
+      );
     } finally {
       if (conn) await conn.release();
     }
   }
-} 
+}

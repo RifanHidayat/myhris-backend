@@ -4,4 +4,4 @@ import { PayslipsController } from './payslips.controller';
 @Module({
   controllers: [PayslipsController],
 })
-export class PayslipsModule {} 
+export class PayslipsModule {}

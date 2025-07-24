@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  BadRequestException,
+} from '@nestjs/common';
 
 interface FieldAssigmentsStoreDto {
   database: string;
@@ -15,7 +19,14 @@ const utility = require('../../../common/utility');
 @Injectable()
 export class FieldAssigmentsStoreService {
   async store(dto: FieldAssigmentsStoreDto): Promise<any> {
-    const { database, nomor_ajuan, menu_name, activity_name, created_by, ...bodyValue } = dto;
+    const {
+      database,
+      nomor_ajuan,
+      menu_name,
+      activity_name,
+      created_by,
+      ...bodyValue
+    } = dto;
     const dateNow = utility.dateNow4();
     const array = dateNow.split('-');
     const tahun = `${array[0]}`;
@@ -42,7 +53,7 @@ export class FieldAssigmentsStoreService {
       conn = await connection.getConnection();
       await conn.beginTransaction();
       const [results] = await conn.query(
-        `SELECT * FROM ${namaDatabaseDynamic}.emp_labor  WHERE nomor_ajuan='${nomor_ajuan}'`
+        `SELECT * FROM ${namaDatabaseDynamic}.emp_labor  WHERE nomor_ajuan='${nomor_ajuan}'`,
       );
       if (results.length > 0) {
         throw new BadRequestException('Nomor ajuan sudah ada');
@@ -50,16 +61,16 @@ export class FieldAssigmentsStoreService {
       await conn.query(script, [bodyValue]);
       await conn.query(
         `INSERT INTO ${namaDatabaseDynamic}.logs_actvity SET ?;`,
-        [dataInsertLog]
+        [dataInsertLog],
       );
       const [transaksi] = await conn.query(
-        `SELECT * FROM ${namaDatabaseDynamic}.emp_labor WHERE nomor_ajuan='${nomor_ajuan}'`
+        `SELECT * FROM ${namaDatabaseDynamic}.emp_labor WHERE nomor_ajuan='${nomor_ajuan}'`,
       );
       const [employee] = await conn.query(
-        `SELECT * FROM ${databaseMaster}.employee WHERE em_id='${transaksi[0].em_id}'`
+        `SELECT * FROM ${databaseMaster}.employee WHERE em_id='${transaksi[0].em_id}'`,
       );
       const [sysdata] = await conn.query(
-        `SELECT * FROM sysdata WHERE kode='034'`
+        `SELECT * FROM sysdata WHERE kode='034'`,
       );
       const delegationIds = employee[0].em_report_to
         ? Array.isArray(employee[0].em_report_to)
@@ -73,8 +84,12 @@ export class FieldAssigmentsStoreService {
         : [];
       const combinedIds = [
         ...new Set([
-          ...delegationIds.flatMap((id) => id.split(',').map((i) => i.trim().toUpperCase())),
-          ...emIds.flatMap((id) => id.split(',').map((i) => i.trim().toUpperCase())),
+          ...delegationIds.flatMap((id) =>
+            id.split(',').map((i) => i.trim().toUpperCase()),
+          ),
+          ...emIds.flatMap((id) =>
+            id.split(',').map((i) => i.trim().toUpperCase()),
+          ),
         ]),
       ];
       utility.insertNotifikasi(
@@ -86,7 +101,7 @@ export class FieldAssigmentsStoreService {
         transaksi[0].nomor_ajuan,
         employee[0].full_name,
         namaDatabaseDynamic,
-        databaseMaster
+        databaseMaster,
       );
       if (sysdata.length > 0 && sysdata[0].name != null) {
         utility.insertNotifikasi(
@@ -98,7 +113,7 @@ export class FieldAssigmentsStoreService {
           transaksi[0].nomor_ajuan,
           employee[0].full_name,
           namaDatabaseDynamic,
-          databaseMaster
+          databaseMaster,
         );
       }
       await conn.commit();
@@ -114,4 +129,4 @@ export class FieldAssigmentsStoreService {
       if (conn) await conn.release();
     }
   }
-} 
+}

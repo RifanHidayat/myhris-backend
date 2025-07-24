@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { SubmitAttendanceDto } from '../dto/submit-attendance.dto';
 import { DbService } from '../../../config/database.service';
 import { SftpService } from '../../../config/sftp.service';
@@ -95,7 +99,10 @@ export class SubmitAttendanceBreakService {
         breakout_note: '',
         breakin_addr: '',
         breakout_addr: '',
-        atttype: kategori && !isNaN(parseInt(kategori as string)) ? parseInt(kategori as string) : 1,
+        atttype:
+          kategori && !isNaN(parseInt(kategori as string))
+            ? parseInt(kategori as string)
+            : 1,
       };
       // Set jam masuk/keluar istirahat, gambar, lokasi, dsb
       const currentTime = new Date();
@@ -146,7 +153,9 @@ export class SubmitAttendanceBreakService {
       };
     } catch (error) {
       if (trx) await trx.rollback();
-      throw new InternalServerErrorException('Gagal submit absen istirahat: ' + error.message);
+      throw new InternalServerErrorException(
+        'Gagal submit absen istirahat: ' + error.message,
+      );
     }
   }
 }

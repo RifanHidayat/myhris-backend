@@ -1,9 +1,17 @@
 import { Module } from '@nestjs/common';
 import { PermissionsController } from './permissions.controller';
-import { PermissionsStoreService, PermissionsUpdateService, PermissionsDeleteService } from './services';
+import {
+  PermissionsStoreService,
+  PermissionsUpdateService,
+  PermissionsDeleteService,
+} from './services';
 
 @Module({
   controllers: [PermissionsController],
-  providers: [PermissionsStoreService, PermissionsUpdateService, PermissionsDeleteService],
+  providers: [
+    PermissionsStoreService,
+    PermissionsUpdateService,
+    PermissionsDeleteService,
+  ],
 })
-export class PermissionsModule {} 
+export class PermissionsModule {}

@@ -3,4 +3,4 @@
  */
 export class DailyTasksDto {
   // Tambahkan properti sesuai kebutuhan
-} 
+}

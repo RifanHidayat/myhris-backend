@@ -49,4 +49,4 @@ export class DailyTasksController {
     // TODO: Implementasi pengambilan detail tugas harian by ID
     return { id };
   }
-} 
+}

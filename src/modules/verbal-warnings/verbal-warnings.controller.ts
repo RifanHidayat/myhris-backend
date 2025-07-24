@@ -10,4 +10,4 @@ export class VerbalWarningsController {
     // TODO: Implementasi pengambilan data Teguran Lisan
     return [];
   }
-} 
+}

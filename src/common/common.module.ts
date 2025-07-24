@@ -8,4 +8,4 @@ import { DbService } from '../config/database.service';
   providers: [FcmService, NotificationService, FirebaseConfig, DbService],
   exports: [FcmService, NotificationService],
 })
-export class CommonModule {} 
+export class CommonModule {}

@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  BadRequestException,
+} from '@nestjs/common';
 
 interface OvertimeOnCommandDto {
   database: string;
@@ -31,7 +35,7 @@ WHERE designation.level <= 3 AND department_group.id = ${dep_group_id};`);
         await conn.commit();
         return {
           status: true,
-          message: "Successfuly get data",
+          message: 'Successfuly get data',
           data: results,
         };
       } catch (e) {

@@ -6,8 +6,19 @@ import { DbService } from '../../../config/database.service';
 export class EmployeeLastAttendanceService {
   constructor(private readonly dbService: DbService) {}
 
-  async viewLastAbsen(dto: SubmitAttendanceDto & { pola?: string | number }): Promise<any> {
-    const { database, em_id, tanggal_absen, start_date, end_date, start_time, end_time, pola } = dto;
+  async viewLastAbsen(
+    dto: SubmitAttendanceDto & { pola?: string | number },
+  ): Promise<any> {
+    const {
+      database,
+      em_id,
+      tanggal_absen,
+      start_date,
+      end_date,
+      start_time,
+      end_time,
+      pola,
+    } = dto;
 
     // Format nama database dinamis
     const array = tanggal_absen.split('-');
@@ -27,7 +38,9 @@ export class EmployeeLastAttendanceService {
         .orderBy('id', 'desc');
 
       // Query sysdata
-      const sysdata = await trx(`${database}_hrm.sysdata`).where({ kode: '018' });
+      const sysdata = await trx(`${database}_hrm.sysdata`).where({
+        kode: '018',
+      });
 
       let _startDate = start_date;
       let _endDate = end_date;
@@ -59,10 +72,13 @@ export class EmployeeLastAttendanceService {
           `${database}_hrm.places_coordinate`,
           `${namaDatabaseDynamic}.attendance.place_in`,
           '=',
-          'places_coordinate.place'
+          'places_coordinate.place',
         )
         .where('em_id', em_id)
-        .andWhereRaw(`CONCAT(atten_date, ' ', signin_time) BETWEEN ? AND ?`, [`${_startDate} ${_startTime}`, `${_endDate} ${_endTime}`])
+        .andWhereRaw(`CONCAT(atten_date, ' ', signin_time) BETWEEN ? AND ?`, [
+          `${_startDate} ${_startTime}`,
+          `${_endDate} ${_endTime}`,
+        ])
         .andWhere('atttype', 1)
         .orderBy('id', 'desc')
         .limit(1);
@@ -71,29 +87,51 @@ export class EmployeeLastAttendanceService {
       let wfhQuery = trx(`${namaDatabaseDynamic}.emp_labor`)
         .select('status', { signing_time: 'dari_jam' }, 'nomor_ajuan')
         .where('em_id', em_id)
-        .andWhereRaw(`CONCAT(atten_date, ' ', dari_jam) >= ? AND NOW() >= ?`, [`${start_date} ${start_time}`, `${start_date} ${start_time}`])
-        .andWhereRaw(`CONCAT(atten_date, ' ', dari_jam) <= ? AND NOW() <= ?`, [`${end_date} ${end_time}`, `${end_date} ${end_time}`])
+        .andWhereRaw(`CONCAT(atten_date, ' ', dari_jam) >= ? AND NOW() >= ?`, [
+          `${start_date} ${start_time}`,
+          `${start_date} ${start_time}`,
+        ])
+        .andWhereRaw(`CONCAT(atten_date, ' ', dari_jam) <= ? AND NOW() <= ?`, [
+          `${end_date} ${end_time}`,
+          `${end_date} ${end_time}`,
+        ])
         .andWhere('status_transaksi', '1');
       if (pola == '2' || pola == 2) {
-        wfhQuery = wfhQuery.andWhere(function () {
-          this.where('ajuan', '4').orWhere('ajuan', '3');
-        }).andWhere(function () {
-          this.where('status', 'Pending').orWhere('status', 'Approve');
-        });
+        wfhQuery = wfhQuery
+          .andWhere(function () {
+            this.where('ajuan', '4').orWhere('ajuan', '3');
+          })
+          .andWhere(function () {
+            this.where('status', 'Pending').orWhere('status', 'Approve');
+          });
       } else {
-        wfhQuery = wfhQuery.andWhere(function () {
-          this.where('ajuan', '4').orWhere('ajuan', '3');
-        }).andWhere('status', 'Pending');
+        wfhQuery = wfhQuery
+          .andWhere(function () {
+            this.where('ajuan', '4').orWhere('ajuan', '3');
+          })
+          .andWhere('status', 'Pending');
       }
       wfhQuery = wfhQuery.orderBy('id', 'desc').limit(1);
       const wfh = await wfhQuery;
 
       // Query Absen Offline
       let absenOfflineQuery = trx(`${namaDatabaseDynamic}.emp_labor`)
-        .select('atten_date', 'status', { signing_time: 'dari_jam' }, { signout_time: 'sampai_jam' }, 'nomor_ajuan')
+        .select(
+          'atten_date',
+          'status',
+          { signing_time: 'dari_jam' },
+          { signout_time: 'sampai_jam' },
+          'nomor_ajuan',
+        )
         .where('em_id', em_id)
-        .andWhereRaw(`CONCAT(atten_date, ' ', dari_jam) >= ? AND NOW() >= ?`, [`${start_date} ${start_time}`, `${start_date} ${start_time}`])
-        .andWhereRaw(`CONCAT(atten_date, ' ', dari_jam) <= ? AND NOW() <= ?`, [`${end_date} ${end_time}`, `${end_date} ${end_time}`])
+        .andWhereRaw(`CONCAT(atten_date, ' ', dari_jam) >= ? AND NOW() >= ?`, [
+          `${start_date} ${start_time}`,
+          `${start_date} ${start_time}`,
+        ])
+        .andWhereRaw(`CONCAT(atten_date, ' ', dari_jam) <= ? AND NOW() <= ?`, [
+          `${end_date} ${end_time}`,
+          `${end_date} ${end_time}`,
+        ])
         .andWhere('ajuan', '5')
         .andWhere('status_transaksi', '1');
       if (pola == '2' || pola == 2) {
@@ -117,7 +155,9 @@ export class EmployeeLastAttendanceService {
       };
     } catch (error) {
       if (trx) await trx.rollback();
-      throw new InternalServerErrorException('Gagal ambil data: ' + error.message);
+      throw new InternalServerErrorException(
+        'Gagal ambil data: ' + error.message,
+      );
     }
   }
 }

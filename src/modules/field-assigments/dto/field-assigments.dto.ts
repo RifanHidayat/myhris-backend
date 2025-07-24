@@ -3,4 +3,4 @@
  */
 export class FieldAssigmentsDto {
   // Tambahkan properti sesuai kebutuhan
-} 
+}

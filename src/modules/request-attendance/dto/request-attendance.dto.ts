@@ -1,4 +1,9 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsDateString,
+} from 'class-validator';
 
 /**
  * DTO untuk Permintaan Absensi
@@ -41,4 +46,4 @@ export class RequestAttendanceUpdateDto {
   @IsOptional()
   @IsString()
   status?: string;
-} 
+}

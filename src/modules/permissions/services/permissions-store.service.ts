@@ -44,4 +44,4 @@ export class PermissionsStoreService {
       throw new InternalServerErrorException('Gagal simpan data izin');
     }
   }
-} 
+}

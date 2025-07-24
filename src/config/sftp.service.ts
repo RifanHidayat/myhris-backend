@@ -17,14 +17,19 @@ export class SftpService {
     const port = this.configService.get<number>('sftp.port');
     const username = this.configService.get<string>('sftp.username');
     const password = this.configService.get<string>('sftp.password');
-    const privateKeyPath = this.configService.get<string>('sftp.privateKeyPath');
+    const privateKeyPath = this.configService.get<string>(
+      'sftp.privateKeyPath',
+    );
 
     let privateKey: Buffer | undefined;
     if (privateKeyPath) {
       try {
         privateKey = fs.readFileSync(privateKeyPath);
       } catch (err) {
-        this.logger.error(`Failed to read private key file: ${privateKeyPath}`, err as Error);
+        this.logger.error(
+          `Failed to read private key file: ${privateKeyPath}`,
+          err as Error,
+        );
         throw err;
       }
     }
@@ -72,7 +77,10 @@ export class SftpService {
         throw new Error('SFTP client get method is not a function');
       }
     } catch (err) {
-      this.logger.error(`Failed to download file from ${remotePath}`, err as Error);
+      this.logger.error(
+        `Failed to download file from ${remotePath}`,
+        err as Error,
+      );
       throw err;
     }
   }

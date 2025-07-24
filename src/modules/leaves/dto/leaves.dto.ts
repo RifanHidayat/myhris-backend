@@ -3,4 +3,4 @@
  */
 export class LeavesDto {
   // Tambahkan properti sesuai kebutuhan
-} 
+}

@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  BadRequestException,
+} from '@nestjs/common';
 
 interface RequestShiftListDto {
   database: string;
@@ -48,4 +52,4 @@ export class RequestShiftListService {
       if (conn) await conn.release();
     }
   }
-}    
+}

@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { SubmitAttendanceDto } from '../dto/submit-attendance.dto';
 import { DbService } from '../../../config/database.service';
 import { SftpService } from '../../../config/sftp.service';
@@ -150,8 +154,9 @@ export class SubmitAttendanceService {
       };
     } catch (error) {
       if (trx) await trx.rollback();
-      throw new InternalServerErrorException('Gagal submit absen: ' + error.message);
+      throw new InternalServerErrorException(
+        'Gagal submit absen: ' + error.message,
+      );
     }
   }
 }
-    

@@ -17,4 +17,4 @@ import * as ReportServices from './services';
     ReportServices.ReportWarningLetterService,
   ],
 })
-export class ReportsModule {} 
+export class ReportsModule {}

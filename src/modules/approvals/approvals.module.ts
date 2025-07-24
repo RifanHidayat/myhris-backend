@@ -17,4 +17,4 @@ import * as ApprovalServices from './services';
     ApprovalServices.ApprovalWarningLetterService,
   ],
 })
-export class ApprovalsModule {} 
+export class ApprovalsModule {}

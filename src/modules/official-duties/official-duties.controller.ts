@@ -49,4 +49,4 @@ export class OfficialDutiesController {
     // TODO: Implementasi pengambilan detail dinas resmi by ID
     return { id };
   }
-} 
+}

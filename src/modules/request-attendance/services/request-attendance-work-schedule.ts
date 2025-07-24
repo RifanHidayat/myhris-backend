@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 
 interface WorkScheduleDto {
   database: string;
@@ -11,7 +15,9 @@ export class RequestAttendanceWorkScheduleService {
     const model = require('../../../common/model');
     let connection;
     try {
-      connection = await (await model.createConnection1(`${database}_hrm`)).getConnection();
+      connection = await (
+        await model.createConnection1(`${database}_hrm`)
+      ).getConnection();
       await connection.beginTransaction();
       const query = `SELECT id, name, time_in, time_out FROM work_schedule`;
       const [records] = await connection.query(query);
@@ -28,7 +34,9 @@ export class RequestAttendanceWorkScheduleService {
       if (connection) {
         await connection.rollback();
       }
-      throw new InternalServerErrorException('Gagal mengambil data work schedule');
+      throw new InternalServerErrorException(
+        'Gagal mengambil data work schedule',
+      );
     } finally {
       if (connection) await connection.release();
     }

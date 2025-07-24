@@ -3,4 +3,4 @@
  */
 export class OfficialDutiesDto {
   // Tambahkan properti sesuai kebutuhan
-} 
+}

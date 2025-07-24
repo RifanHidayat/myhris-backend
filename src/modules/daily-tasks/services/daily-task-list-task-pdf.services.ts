@@ -52,7 +52,9 @@ export class DailyTaskListTaskPdfService {
       };
     } catch (error) {
       if (conn) await conn.rollback();
-      throw new InternalServerErrorException('Gagal mendapatkan data AllDailyTask: ' + error.message);
+      throw new InternalServerErrorException(
+        'Gagal mendapatkan data AllDailyTask: ' + error.message,
+      );
     } finally {
       if (conn) conn.release();
     }

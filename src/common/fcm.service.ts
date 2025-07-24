@@ -50,8 +50,8 @@ export class FcmService {
     message: string,
   ): Promise<{ status: boolean; message: string }> {
     try {
-      const tokenArray = tokens.split(',').filter(token => token.trim());
-      
+      const tokenArray = tokens.split(',').filter((token) => token.trim());
+
       for (const token of tokenArray) {
         const notificationMessage: NotificationMessage = {
           data: {
@@ -67,7 +67,9 @@ export class FcmService {
         await this.messaging.send(notificationMessage);
       }
 
-      this.logger.log(`Berhasil kirim notifikasi web ke ${tokenArray.length} token`);
+      this.logger.log(
+        `Berhasil kirim notifikasi web ke ${tokenArray.length} token`,
+      );
       return {
         status: true,
         message: 'Berhasil kirim notifikasi web!',
@@ -153,7 +155,10 @@ export class FcmService {
       await this.messaging.send(notificationMessage);
       this.logger.log('Notifikasi approval dengan nomor berhasil dikirim');
     } catch (error) {
-      this.logger.error('Error sending approval notification with number:', error);
+      this.logger.error(
+        'Error sending approval notification with number:',
+        error,
+      );
     }
   }
 
@@ -303,11 +308,17 @@ export class FcmService {
         token: token.trim(),
       };
 
-      this.logger.log('Sending attendance warning notification:', notificationMessage);
+      this.logger.log(
+        'Sending attendance warning notification:',
+        notificationMessage,
+      );
       await this.messaging.send(notificationMessage);
       this.logger.log('Notifikasi absensi warning berhasil dikirim');
     } catch (error) {
-      this.logger.error('Error sending attendance warning notification:', error);
+      this.logger.error(
+        'Error sending attendance warning notification:',
+        error,
+      );
     }
   }
-} 
+}

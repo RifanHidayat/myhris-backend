@@ -49,4 +49,4 @@ export class PermissionsController {
     // TODO: Implementasi pengambilan detail izin by ID
     return { id };
   }
-} 
+}
