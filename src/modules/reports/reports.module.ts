@@ -1,20 +1,19 @@
 import { Module } from '@nestjs/common';
 import { ReportsController } from './reports.controller';
-import * as ReportServices from './services';
+import { ReportLeavesService } from './services/report-leaves.service';
+import { ReportPermissionsService } from './services/report-permissions.service';
+import { ReportFieldAssigmentService } from './services/report-field-assigment.service';
+import { ReportOfficialDutyService } from './services/report-official-duty.service';
+import { ReportDayOffService } from './services/report-dayoff.service';
 
 @Module({
   controllers: [ReportsController],
   providers: [
-    ReportServices.ReportLeavesService,
-    ReportServices.ReportPermissionsService,
-    ReportServices.ReportFieldAssigmentService,
-    ReportServices.ReportOfficialDutyService,
-    ReportServices.ReportPayslipService,
-    ReportServices.ReportAttendanceService,
-    ReportServices.ReportWfhService,
-    ReportServices.ReportLoanService,
-    ReportServices.ReportVerbalWarningService,
-    ReportServices.ReportWarningLetterService,
+    ReportLeavesService,
+    ReportPermissionsService,
+    ReportFieldAssigmentService,
+    ReportOfficialDutyService,
+    ReportDayOffService,
   ],
 })
 export class ReportsModule {}

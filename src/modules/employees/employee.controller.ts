@@ -5,6 +5,7 @@ import {
   Get,
   Post,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { EmployeeDetailService } from './services/employee-detail-service';
@@ -25,6 +26,7 @@ export class EmployeeController {
   async fetchDatabase(
     @Headers('x-tenant-id') tenant: string,
     @Headers('x-em-id') emId: string,
+    @Req() req: any,
   ): Promise<any> {
     const dtoWithHeaders = {
       tenant,
@@ -41,6 +43,7 @@ export class EmployeeController {
     @Headers('x-branch-id') branchId: string,
     @Headers('x-start-periode') startPeriode: string,
     @Headers('x-end-periode') endPeriode: string,
+    @Req() req: any,
   ): Promise<any> {
     const dtoWithHeaders = {
       tenant,
@@ -54,7 +57,7 @@ export class EmployeeController {
 
   @UseGuards(JwtAuthGuard)
   @Post('last-attendance')
-  async viewLastAttendance(@Body() dto: any): Promise<any> {
+  async viewLastAttendance(@Body() dto: any, @Req() req: any): Promise<any> {
     return this.employeeLastAttendanceService.viewLastAbsen(dto);
   }
 }

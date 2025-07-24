@@ -1,4 +1,4 @@
-import { Controller, Body, Headers, Get, UseGuards } from '@nestjs/common';
+import { Controller, Req, Get, UseGuards, Body } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { DashboardService } from './services/dashboard-service';
 // import { EmployeeDetailDto } from './dto/employee-detail.dto';
@@ -9,21 +9,17 @@ export class EmployeeController {
 
   @UseGuards(JwtAuthGuard)
   @Get('')
-  async getAll(
-    @Headers('x-tenant-id') tenant: string,
-    @Headers('x-em-id') emId: string,
-    @Headers('x-branch-id') branchId: string,
-    @Headers('x-start-periode') startPeriode: string,
-    @Headers('x-end-periode') endPeriode: string,
-  ): Promise<any> {
+  async getAll(@Req() req, @Body() body: any): Promise<any> {
+    const { database, emId, branchId, startPeriode, endPeriode } = req.globalParams;
+    // body tetap bisa digunakan jika ada
     const dtoWithHeaders = {
-      tenant,
+      tenant: database, // mapping database to tenant
       emId,
       branchId,
       startPeriode,
       endPeriode,
+      ...body, // merge body jika ada field tambahan
     };
-
     return this.dashboardService.index(dtoWithHeaders);
   }
 }

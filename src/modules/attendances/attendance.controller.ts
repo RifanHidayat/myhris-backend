@@ -5,6 +5,7 @@ import {
   Get,
   Post,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AttendanceListService } from './services/attendance.list.services';
@@ -23,6 +24,7 @@ export class EmployeeController {
   @UseGuards(JwtAuthGuard)
   @Get('list')
   async getAll(
+    @Req() req: any,
     @Headers('x-tenant-id') tenant: string,
     @Headers('x-em-id') emId: string,
     @Headers('x-branch-id') branchId: string,
@@ -41,13 +43,13 @@ export class EmployeeController {
 
   @UseGuards(JwtAuthGuard)
   @Post('submit')
-  async submitAttendance(@Body() dto: any): Promise<any> {
+  async submitAttendance(@Req() req: any, @Body() dto: any): Promise<any> {
     return this.submitAttendanceService.submitAttendance(dto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('submit-break')
-  async submitAttendanceBreak(@Body() dto: any): Promise<any> {
+  async submitAttendanceBreak(@Req() req: any, @Body() dto: any): Promise<any> {
     return this.submitAttendanceBreakService.submitAttendanceBreak(dto);
   }
 }

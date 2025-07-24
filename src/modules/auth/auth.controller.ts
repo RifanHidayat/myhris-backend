@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Headers, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Headers, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -13,6 +13,7 @@ export class AuthController {
     @Headers('x-tenant-id') tenant: string,
     @Headers('x-start-period') startPeriod: string,
     @Headers('x-end-period') endPeriod: string,
+    @Req() req: any,
   ) {
     const dtoWithHeaders = {
       ...loginDto,
@@ -29,6 +30,7 @@ export class AuthController {
   async fetchDatabase(
     @Body() loginDto: LoginDto,
     @Headers('x-tenant-id') tenant: string,
+    @Req() req: any,
   ): Promise<any> {
     const dtoWithHeaders = {
       ...loginDto,
