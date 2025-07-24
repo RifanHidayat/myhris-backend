@@ -10,9 +10,17 @@ import { ConfigModule } from '@nestjs/config';
 //modules
 import { AuthModule } from './modules/auth/auth.module';
 import { EmployeeModule } from './modules/employees/employee.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), AuthModule, EmployeeModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    AuthModule,
+    EmployeeModule,
+    CommonModule,
+  ],
   controllers: [AppController],
   providers: [AppService, DbService],
   exports: [DbService],

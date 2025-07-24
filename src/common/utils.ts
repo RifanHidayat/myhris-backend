@@ -1,3 +1,5 @@
+import * as crypto from 'crypto';
+
 export function formatDbName(date: string, db: string): string {
   const [year, month] = date.split('-');
   const shortYear = year.slice(-2);
@@ -32,3 +34,16 @@ export function getDateNow(): string {
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+export function decryptText(textToDecrypt: string, key: string): string {
+  const ciphering = 'aes-256-cbc';
+  const decryptionIv = Buffer.from('1983759874219020', 'utf-8');
+  const decryptionKey = Buffer.from(key, 'utf-8');
+  const encryptedText = Buffer.from(textToDecrypt, 'base64');
+  const decipher = crypto.createDecipheriv(ciphering, decryptionKey, decryptionIv);
+  let decrypted = Buffer.concat([
+    decipher.update(encryptedText),
+    decipher.final(),
+  ]);
+  return decrypted.toString('utf-8');
+}  

@@ -1,7 +1,8 @@
-import { Controller, Body, Headers, Get } from '@nestjs/common';
-// import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Controller, Body, Headers, Get, Post, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { EmployeeDetailService } from './services/employee-detail-service';
 import { EmployeeListService } from './services/employee-list-service';
+import { EmployeeLastAttendanceService } from './services/eemployee-last-attendance';
 // import { EmployeeDetailDto } from './dto/employee-detail.dto';
 
 @Controller('employees')
@@ -9,9 +10,10 @@ export class EmployeeController {
   constructor(
     private readonly employeeService: EmployeeDetailService,
     private readonly employeeListService: EmployeeListService,
+    private readonly employeeLastAttendanceService: EmployeeLastAttendanceService,
   ) {}
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('detail')
   async fetchDatabase(
     @Headers('x-tenant-id') tenant: string,
@@ -21,11 +23,10 @@ export class EmployeeController {
       tenant,
       emId,
     };
-
     return this.employeeService.detail(dtoWithHeaders);
   }
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('')
   async getAllEmployee(
     @Headers('x-tenant-id') tenant: string,
@@ -41,8 +42,13 @@ export class EmployeeController {
       startPeriode,
       endPeriode,
     };
-
     return this.employeeListService.index(dtoWithHeaders);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('last-attendance')
+  async viewLastAttendance(@Body() dto: any): Promise<any> {
+    return this.employeeLastAttendanceService.viewLastAttendance(dto);
   }
 }
 //   @Post('detail')

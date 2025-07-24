@@ -1,5 +1,5 @@
-import { Controller, Body, Headers, Get } from '@nestjs/common';
-// import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Controller, Body, Headers, Get, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { DashboardService } from './services/dashboard-service';
 // import { EmployeeDetailDto } from './dto/employee-detail.dto';
 
@@ -7,7 +7,7 @@ import { DashboardService } from './services/dashboard-service';
 export class EmployeeController {
   constructor(private readonly dashboardService: DashboardService) {}
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('')
   async getAll(
     @Headers('x-tenant-id') tenant: string,

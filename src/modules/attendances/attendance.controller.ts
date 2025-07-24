@@ -1,13 +1,19 @@
-import { Controller, Body, Headers, Get } from '@nestjs/common';
-// import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Controller, Body, Headers, Get, Post, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AttendanceListService } from './services/attendance.list.services';
+import { SubmitAttendanceService } from './services/submit-attendance.services';
+import { SubmitAttendanceBreakService } from './services/submit-attendance-break.services';
 // import { EmployeeDetailDto } from './dto/employee-detail.dto';
 
 @Controller('attedance')
 export class EmployeeController {
-  constructor(private readonly attendanceListService: AttendanceListService) {}
+  constructor(
+    private readonly attendanceListService: AttendanceListService,
+    private readonly submitAttendanceService: SubmitAttendanceService,
+    private readonly submitAttendanceBreakService: SubmitAttendanceBreakService,
+  ) {}
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('list')
   async getAll(
     @Headers('x-tenant-id') tenant: string,
@@ -23,8 +29,19 @@ export class EmployeeController {
       startPeriode,
       endPeriode,
     };
-
     return this.attendanceListService.index(dtoWithHeaders);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('submit')
+  async submitAttendance(@Body() dto: any): Promise<any> {
+    return this.submitAttendanceService.submitAttendance(dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('submit-break')
+  async submitAttendanceBreak(@Body() dto: any): Promise<any> {
+    return this.submitAttendanceBreakService.submitAttendanceBreak(dto);
   }
 }
 //   @Post('detail')

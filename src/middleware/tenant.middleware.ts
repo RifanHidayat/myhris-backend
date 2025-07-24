@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, NestMiddleware, BadRequestException } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 
 @Injectable()
@@ -9,10 +9,9 @@ export class HeaderContextMiddleware implements NestMiddleware {
     const endPeriod = req.headers['x-end-period'] as string;
 
     if (!tenant) {
-      return res.status(400).json({ message: 'Tenant header tidak ditemukan' });
+      throw new BadRequestException('Tenant header tidak ditemukan');
     }
 
-    // Simpan ke request object
     req.tenant = tenant;
     req.startPeriod = startPeriod;
     req.endPeriod = endPeriod;
