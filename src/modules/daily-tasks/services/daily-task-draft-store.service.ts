@@ -1,58 +1,64 @@
-import { Request, Response } from 'express';
-import { models } from '../../../common/model';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { DbService } from '../../../config/database.service';
 
-export async function insertDraft(req: Request, res: Response): Promise<void> {
-  const database: string = req.query.database as string;
-  const em_id: string = req.body.em_id;
-  const array: string[] = req.body.atten_date.split('-');
-  const listTask: any[] = req.body.list_task;
-  const attenDate: string = req.body.atten_date;
-  const status: string = req.body.status;
-  const tanggalOld: string = req.body.tanggal_old;
+interface InsertDraftDto {
+  database: string;
+  em_id: string;
+  atten_date: string;
+  list_task: any[];
+  status: string;
+  tanggal_old: string;
+  tenant?: string;
+  start_periode?: string;
+  end_periode?: string;
+}
 
-  const tahun = `${array[0]}`;
-  const convertYear = tahun.substring(2, 4);
-  const convertBulan = array[1].padStart(2, '0');
-  const namaDatabaseDynamic = `${database}_hrm${convertYear}${convertBulan}`;
-  const connection = await models.createConnection1(namaDatabaseDynamic);
-  let conn: any;
-  try {
-    conn = await connection.getConnection();
-    await conn.beginTransaction();
+function formatDate(date: string): string {
+  if (!date) return '';
+  const d = new Date(date);
+  return d.toISOString().split('T')[0];
+}
 
-    const tanggalFinal = tanggalOld === '' ? attenDate : tanggalOld;
-    const [cekDaily] = await conn.query(
-      `SELECT id FROM daily_task WHERE tgl_buat = ? AND em_id = ?`,
-      [attenDate, em_id]
-    );
-    if (cekDaily.length > 0) {
-      res.status(400).json({
-        status: false,
-        message: `Tugas di tanggal ${attenDate} ini sudah tersedia`,
-      });
-      return;
+@Injectable()
+export class DailyTaskDraftStoreService {
+  constructor(private readonly dbService: DbService) {}
+
+  async insertDraft(dto: InsertDraftDto): Promise<any> {
+    const { database, em_id, atten_date, list_task, status, tanggal_old, tenant, start_periode, end_periode } = dto;
+    const array = atten_date.split('-');
+    const tahun = `${array[0]}`;
+    const convertYear = tahun.substring(2, 4);
+    const convertBulan = array[1].padStart(2, '0');
+    const namaDatabaseDynamic = `${database}_hrm${convertYear}${convertBulan}`;
+    const knex = this.dbService.getConnection(database);
+    let trx;
+    try {
+      trx = await knex.transaction();
+      const tanggalFinal = tanggal_old === '' ? atten_date : tanggal_old;
+      const [cekDaily] = await trx.raw(
+        `SELECT id FROM ${namaDatabaseDynamic}.daily_task WHERE tgl_buat = ? AND em_id = ?`,
+        [atten_date, em_id]
+      );
+      if (cekDaily.length > 0) {
+        throw new InternalServerErrorException(`Tugas di tanggal ${atten_date} ini sudah tersedia`);
+      }
+      const queryTask = `INSERT INTO ${namaDatabaseDynamic}.daily_task (em_id, tgl_buat, status_pengajuan) VALUES (?, ?, ?)`;
+      const [task] = await trx.raw(queryTask, [em_id, atten_date, status]);
+      const taskId = task.insertId || (task[0] && task[0].insertId);
+      const queryDetail = `INSERT INTO ${namaDatabaseDynamic}.daily_task_detail (judul, rincian, tgl_finish, daily_task_id, status, level) VALUES (?, ?, ?, ?, ?, ?)`;
+      for (const item of list_task) {
+        const { task, judul, status, level, tgl_finish } = item;
+        const tanggal = formatDate(tgl_finish);
+        await trx.raw(queryDetail, [judul, task, tanggal, taskId, status.toString(), level]);
+      }
+      await trx.commit();
+      return {
+        success: true,
+        message: 'Data berhasil di masukan',
+      };
+    } catch (error) {
+      if (trx) await trx.rollback();
+      throw new InternalServerErrorException('Gagal memperbarui data: ' + error.message);
     }
-    const queryTask = `INSERT INTO daily_task (em_id, tgl_buat, status_pengajuan) VALUES (?, ?, ?)`;
-    const [task] = await conn.query(queryTask, [em_id, attenDate, status]);
-    const taskId = task.insertId;
-    const queryDetail = `INSERT INTO daily_task_detail (judul, rincian, tgl_finish, daily_task_id, status, level) VALUES (?, ?, ?, ?, ?, ?)`;
-    for (const item of listTask) {
-      const { task, judul, status, level, tgl_finish } = item;
-      const tanggal = formatDate(tgl_finish);
-      await conn.query(queryDetail, [judul, task, tanggal, taskId, status.toString(), level]);
-    }
-    await conn.commit();
-    res.status(200).json({
-      success: true,
-      message: 'Data berhasil di masukan',
-    });
-  } catch (error: any) {
-    if (conn) await conn.rollback();
-    res.status(500).json({
-      success: false,
-      message: 'Gagal memperbarui data: ' + error.message,
-    });
-  } finally {
-    if (conn) conn.release();
   }
 }

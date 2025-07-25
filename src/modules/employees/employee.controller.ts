@@ -26,11 +26,15 @@ export class EmployeeController {
   async fetchDatabase(
     @Headers('x-tenant-id') tenant: string,
     @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
     @Req() req: any,
   ): Promise<any> {
     const dtoWithHeaders = {
       tenant,
       emId,
+      startPeriode,
+      endPeriode,
     };
     return this.employeeService.detail(dtoWithHeaders);
   }
@@ -41,8 +45,8 @@ export class EmployeeController {
     @Headers('x-tenant-id') tenant: string,
     @Headers('x-em-id') emId: string,
     @Headers('x-branch-id') branchId: string,
-    @Headers('x-start-periode') startPeriode: string,
-    @Headers('x-end-periode') endPeriode: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
     @Req() req: any,
   ): Promise<any> {
     const dtoWithHeaders = {
@@ -57,8 +61,15 @@ export class EmployeeController {
 
   @UseGuards(JwtAuthGuard)
   @Post('last-attendance')
-  async viewLastAttendance(@Body() dto: any, @Req() req: any): Promise<any> {
-    return this.employeeLastAttendanceService.viewLastAbsen(dto);
+  async viewLastAttendance(
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Body() dto: any,
+    @Req() req: any,
+  ): Promise<any> {
+    return this.employeeLastAttendanceService.viewLastAbsen({ ...dto, tenant, emId, startPeriode, endPeriode });
   }
 }
 //   @Post('detail')

@@ -1,0 +1,16 @@
+export { ImboxLoadInfoService } from './imbox-load-info.service';
+export { ImboxLoadNotifikasiService } from './imbox-load-notifikasi.service';
+export { ImboxLoadNotifikasiApprovalService } from './imbox-load-notifikasi-approval-service';
+export { ImboxSpesifikApprovalMultiService } from './imbox-spesifik-approval-multi.service';
+export { ImboxLoadDataPermissionService } from './imbox-load-data-permission.service';
+export { ImboxLoadDataCutiService } from './imbox-load-data-cuti.service';
+export { ImboxLoadDataFieldAssignmentsService } from './imbox-load-data-field-assignments.service 4';
+export { ImboxLoadDataOfficialDutyService } from './imbox-load-data-official-duty.service';
+export { ImboxLoadDataClaimService } from './imbox-load-data-claim-service';
+export { ImboxLoadDataAttendanceService } from './imbox-load-data-attendance.service';
+export { ImboxLoadDataWfhService } from './imbox-load-data-wfh.service';
+export { ImboxLoadDataLoanService } from './imbox-load-data-loan.service copy';
+export { ImboxLoadDataWarningLetterService } from './imbox-load-data-warning-letter.service';
+export { ImboxLoadDataVerbalWarmingsService } from './imbox-load-data-verbal-warmings.service';
+export { ImboxLoadDataDayOffService } from './imbox-load-data-day-off.service';
+export { ImboxLoadDataRequestShiftService } from './imbox-load-data-request-shift.service'; 

@@ -5,6 +5,7 @@ import {
   OfficialDutiesUpdateService,
   OfficialDutiesDeleteService,
 } from './services';
+import { OfficialDutiesListService } from './services/official-duties-list';
 
 @Module({
   controllers: [OfficialDutiesController],
@@ -12,6 +13,7 @@ import {
     OfficialDutiesStoreService,
     OfficialDutiesUpdateService,
     OfficialDutiesDeleteService,
+    OfficialDutiesListService,
   ],
 })
 export class OfficialDutiesModule {}

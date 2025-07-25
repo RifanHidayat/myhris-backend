@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards, Body, Put, Req, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, UseGuards, Body, Req, Query, Headers } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RequestShiftsUpdateService } from './services/request-shifts-update.service';
 import { RequestShiftsStoreService } from './services/request-shifts-store.service';
@@ -18,36 +18,65 @@ export class RequestShiftsController {
   ) {}
 
   @UseGuards(JwtAuthGuard)
-  @Get('')
-  async getAll(@Req() req: any, @Query() query: any): Promise<any> {
-    // TODO: Implementasi pengambilan data permintaan shift
-    return [];
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Get('list')
-  async getAllData(@Req() req: any, @Query() query: any): Promise<any> {
-    // TODO: Implementasi pengambilan semua data permintaan shift
-    return [];
+  async getAllData(
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Req() req: any, @Query() query: any
+  ): Promise<any> {
+    return this.requestShiftListService.show({ ...req.globalParams, ...query, tenant, emId, startPeriode, endPeriode });
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async getById(@Param('id') id: string, @Req() req: any): Promise<any> {
-    // TODO: Implementasi pengambilan data permintaan shift by ID
-    return { id };
+  async getById(
+    @Param('id') id: string,
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Req() req: any
+  ): Promise<any> {
+    return { id, tenant, emId, startPeriode, endPeriode };
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('detail/:id')
-  async getByIdDetail(@Param('id') id: string, @Req() req: any): Promise<any> {
-    // TODO: Implementasi pengambilan detail permintaan shift by ID
-    return { id };
+  @Post('')
+  async store(
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Req() req: any, @Body() dto: any
+  ): Promise<any> {
+    return this.requestShiftsStoreService.store({ ...req.globalParams, ...dto, tenant, emId, startPeriode, endPeriode });
   }
 
   @UseGuards(JwtAuthGuard)
   @Put(':id')
-  async update(@Param('id') id: string, @Req() req: any, @Body() dto: any): Promise<any> {
-    return this.requestShiftsUpdateService.edit({ ...req.globalParams, ...dto, id });
+  async update(
+    @Param('id') id: string,
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Req() req: any, @Body() dto: any
+  ): Promise<any> {
+    return this.requestShiftsUpdateService.edit({ ...req.globalParams, ...dto, id, tenant, emId, startPeriode, endPeriode });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async delete(
+    @Param('id') id: string,
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Req() req: any
+  ): Promise<any> {
+    return { id, tenant, emId, startPeriode, endPeriode };
   }
 }

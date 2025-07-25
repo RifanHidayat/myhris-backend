@@ -10,6 +10,8 @@ import { ConfigModule } from '@nestjs/config';
 //modules
 import { AuthModule } from './modules/auth/auth.module';
 import { EmployeeModule } from './modules/employees/employee.module';
+import { ActivitiesModule } from './modules/activities/activities.module';
+import { ImboxModule } from './modules/imbox/imbox.module';
 import { CommonModule } from './common/common.module';
 
 @Module({
@@ -19,6 +21,8 @@ import { CommonModule } from './common/common.module';
     }),
     AuthModule,
     EmployeeModule,
+    ActivitiesModule,
+    ImboxModule,
     CommonModule,
   ],
   controllers: [AppController],

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards, Req, Headers } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { LeavesListService } from './services/leave-list.services';
 import { LeavesStoreService } from './services/leaves-store.service';
@@ -18,7 +18,13 @@ export class LeavesController {
 
   @UseGuards(JwtAuthGuard)
   @Post('store')
-  async store(@Req() req: any, @Body() body: any): Promise<any> {
-    return this.storeService.store({ ...req.globalParams, ...body });
+  async store(
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Body() body: any,
+  ): Promise<any> {
+    return this.storeService.store({ ...body, tenant, emId, startPeriode, endPeriode });
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards, Body, Put, Req, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, UseGuards, Body, Req, Query } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OvertimesUpdateService } from './services/overtimes-update.service';
 import { OvertimesStoreService } from './services/overtimes-store.service';
@@ -16,13 +16,6 @@ export class OvertimesController {
   ) {}
 
   @UseGuards(JwtAuthGuard)
-  @Get('')
-  async getAll(@Req() req: any, @Query() query: any): Promise<any> {
-    // TODO: Implementasi pengambilan data lembur
-    return [];
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Get('list')
   async getAllData(@Req() req: any, @Query() query: any): Promise<any> {
     // TODO: Implementasi pengambilan semua data lembur
@@ -37,15 +30,22 @@ export class OvertimesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('detail/:id')
-  async getByIdDetail(@Param('id') id: string, @Req() req: any): Promise<any> {
-    // TODO: Implementasi pengambilan detail lembur by ID
-    return { id };
+  @Post('')
+  async store(@Req() req: any, @Body() dto: any): Promise<any> {
+    // TODO: Implementasi store lembur
+    return { ...req.globalParams, ...dto };
   }
 
   @UseGuards(JwtAuthGuard)
   @Put(':id')
   async update(@Param('id') id: string, @Req() req: any, @Body() dto: any): Promise<any> {
     return this.overtimesUpdateService.updateLembur({ ...req.globalParams, ...dto, id });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async delete(@Param('id') id: string, @Req() req: any): Promise<any> {
+    // TODO: Implementasi delete lembur
+    return { id };
   }
 }

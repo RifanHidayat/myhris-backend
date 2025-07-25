@@ -1,4 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { DbService } from '../../../config/database.service';
 
 interface DailyTaskListDto {
   database: string;
@@ -6,17 +7,18 @@ interface DailyTaskListDto {
   bulan: string;
   tahun: string;
   atasanStatus?: string;
+  tenant?: string;
+  emId?: string;
+  start_periode?: string;
+  end_periode?: string;
 }
 
 @Injectable()
 export class DailyTaskListService {
+  constructor(private readonly dbService: DbService) {}
+
   async getAllDailyTask(dto: DailyTaskListDto): Promise<any> {
-    const model = require('../../../common/model');
-    const database = dto.database;
-    const em_id = dto.em_id;
-    const bulan = dto.bulan;
-    const tahun = dto.tahun;
-    const statusFilter = dto.atasanStatus;
+    const { database, em_id, bulan, tahun, atasanStatus, tenant, emId, start_periode, end_periode } = dto;
     const convertYear = tahun.substring(2, 4);
     let convertBulan;
     if (bulan.length == 1) {
@@ -39,42 +41,21 @@ export class DailyTaskListService {
     if (montStart < monthEnd || date1.getFullYear() < date2.getFullYear()) {
       namaDatabaseDynamic = startPeriodeDynamic;
     }
-    const databaseMaster = `${database}_hrm`;
-    const connection = await model.createConnection1(namaDatabaseDynamic);
-    let conn;
+    const knex = this.dbService.getConnection(database);
+    let trx;
     try {
-      conn = await connection.getConnection();
-      await conn.beginTransaction();
-      const queryCek = `SELECT tgl_buat FROM daily_task WHERE em_id = ? ORDER BY tgl_buat DESC LIMIT 1`;
-      const [cekdata] = await conn.query(queryCek, [em_id]);
-      let tglFinal: string;
-      if (cekdata.length > 0 && cekdata[0].tgl_buat) {
-        const tglBuat = cekdata[0].tgl_buat instanceof Date ? cekdata[0].tgl_buat.toISOString().split('T')[0] : cekdata[0].tgl_buat;
-        const today = new Date();
-        const tglBuatDate = new Date(tglBuat);
-        if (tglBuatDate > today) {
-          tglFinal = tglBuat;
-        } else {
-          tglFinal = today.toISOString().split('T')[0];
-        }
-      } else {
-        tglFinal = new Date().toISOString().split('T')[0];
-      }
-      const querySysData = `SELECT * FROM ${databaseMaster}.sysdata WHERE KODE='013'`;
-      const [sysdata] = await conn.query(querySysData);
+      trx = await knex.transaction();
+      const queryCek = `SELECT tgl_buat FROM ${namaDatabaseDynamic}.daily_task WHERE em_id = ? ORDER BY tgl_buat DESC LIMIT 1`;
+      const [cekdata] = await trx.raw(queryCek, [em_id]);
       // ... (queryTaskPersetujuan1 dan queryTaskPersetujuan2, logic sama, return object)
-      await conn.commit();
+      await trx.commit();
       return {
         success: true,
-        data: [], // TODO: isi dengan hasil query
+        data: cekdata, // TODO: isi dengan hasil query
       };
     } catch (error) {
-      if (conn) await conn.rollback();
-      throw new InternalServerErrorException(
-        'Gagal dapatkan data AllDailyTask: ' + error.message,
-      );
-    } finally {
-      if (conn) conn.release();
+      if (trx) await trx.rollback();
+      throw new InternalServerErrorException('Gagal dapatkan data AllDailyTask: ' + error.message);
     }
   }
 }

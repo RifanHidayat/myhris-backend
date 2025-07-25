@@ -1,25 +1,32 @@
-import { Controller, Get, Param, UseGuards, Req, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, UseGuards, Req, Query, Body, Headers } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionListService } from './services/permission-list.service';
+import { PermissionsStoreService } from './services/permissions-store.service';
+import { PermissionsUpdateService } from './services/permissions-update.service';
+import { PermissionsDeleteService } from './services/permissions-delete.service';
 
 /**
  * Controller untuk menu Izin
  */
 @Controller('permissions')
 export class PermissionsController {
-  constructor(private readonly permissionListService: PermissionListService) {}
-
-  @UseGuards(JwtAuthGuard)
-  @Get('')
-  async getAll(@Req() req: any): Promise<any> {
-    // TODO: Implementasi pengambilan data izin
-    return [];
-  }
+  constructor(
+    private readonly permissionListService: PermissionListService,
+    private readonly permissionsStoreService: PermissionsStoreService,
+    private readonly permissionsUpdateService: PermissionsUpdateService,
+    private readonly permissionsDeleteService: PermissionsDeleteService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('list')
-  async getAllData(@Req() req: any, @Query() query: any): Promise<any> {
-    return this.permissionListService.empLeaveLoadIzin({ ...req.globalParams, ...query });
+  async getAllData(
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Req() req: any, @Query() query: any
+  ): Promise<any> {
+    return this.permissionListService.empLeaveLoadIzin({ ...req.globalParams, ...query, tenant, emId, startPeriode, endPeriode });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -30,9 +37,28 @@ export class PermissionsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('detail/:id')
-  async getByIdDetail(@Param('id') id: string, @Req() req: any): Promise<any> {
-    // TODO: Implementasi pengambilan detail izin by ID
+  @Post('store')
+  async store(
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Req() req: any, @Body() dto: any
+  ): Promise<any> {
+    return this.permissionsStoreService.store({ ...req.globalParams, ...dto, tenant, emId, startPeriode, endPeriode });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id')
+  async update(@Param('id') id: string, @Req() req: any, @Body() dto: any): Promise<any> {
+    // TODO: Implementasi update izin
+    return { id, ...dto };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async delete(@Param('id') id: string, @Req() req: any): Promise<any> {
+    // TODO: Implementasi delete izin
     return { id };
   }
 }

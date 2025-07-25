@@ -43,14 +43,26 @@ export class EmployeeController {
 
   @UseGuards(JwtAuthGuard)
   @Post('submit')
-  async submitAttendance(@Req() req: any, @Body() dto: any): Promise<any> {
-    return this.submitAttendanceService.submitAttendance(dto);
+  async submitAttendance(
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Body() dto: any,
+  ): Promise<any> {
+    return this.submitAttendanceService.submitAttendance({ ...dto, tenant, emId, startPeriode, endPeriode });
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('submit-break')
-  async submitAttendanceBreak(@Req() req: any, @Body() dto: any): Promise<any> {
-    return this.submitAttendanceBreakService.submitAttendanceBreak(dto);
+  async submitAttendanceBreak(
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Body() dto: any,
+  ): Promise<any> {
+    return this.submitAttendanceBreakService.submitAttendanceBreak({ ...dto, tenant, emId, startPeriode, endPeriode });
   }
 }
 //   @Post('detail')

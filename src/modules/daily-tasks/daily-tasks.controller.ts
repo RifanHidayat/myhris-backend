@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards, Req, Body, Post } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Req, Body, Post, Headers } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { DailyTasksStoreService } from './services/daily-task-store.service';
 import { DailyTaskListService } from './services/daily-task-list.service';
@@ -25,36 +25,68 @@ export class DailyTasksController {
 
   @UseGuards(JwtAuthGuard)
   @Get('')
-  async getAll(@Req() req: any): Promise<any> {
+  async getAll(
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Req() req: any
+  ): Promise<any> {
     // TODO: Implementasi pengambilan data tugas harian
     return [];
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('list')
-  async getAllData(@Req() req: any): Promise<any> {
+  async getAllData(
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Req() req: any
+  ): Promise<any> {
     // TODO: Implementasi pengambilan semua data tugas harian
     return [];
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async getById(@Param('id') id: string, @Req() req: any): Promise<any> {
+  async getById(
+    @Param('id') id: string,
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Req() req: any
+  ): Promise<any> {
     // TODO: Implementasi pengambilan data tugas harian by ID
-    return { id };
+    return { id, tenant, emId, startPeriode, endPeriode };
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('detail/:id')
-  async getByIdDetail(@Param('id') id: string, @Req() req: any): Promise<any> {
+  async getByIdDetail(
+    @Param('id') id: string,
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Req() req: any
+  ): Promise<any> {
     // TODO: Implementasi pengambilan detail tugas harian by ID
-    return { id };
+    return { id, tenant, emId, startPeriode, endPeriode };
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('store')
-  async store(@Req() req: any, @Body() body: any): Promise<any> {
-    // Merge globalParams and body for service call
-    return this.storeService.insertDailyTask({ ...req.globalParams, ...body });
+  async store(
+    @Headers('x-tenant-id') tenant: string,
+    @Headers('x-em-id') emId: string,
+    @Headers('start_periode') startPeriode: string,
+    @Headers('end_periode') endPeriode: string,
+    @Req() req: any, @Body() body: any
+  ): Promise<any> {
+    // Merge globalParams, body, dan headers untuk service call
+    return this.storeService.insertDailyTask({ ...req.globalParams, ...body, tenant, emId, startPeriode, endPeriode });
   }
 }

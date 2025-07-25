@@ -1,4 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { DbService } from '../../../config/database.service';
 
 interface DailyTasksStoreDto {
   database: string;
@@ -13,6 +14,10 @@ interface DailyTasksStoreDto {
   }>;
   status: string;
   id?: string;
+  tenant?: string;
+  emId?: string;
+  start_periode?: string;
+  end_periode?: string;
 }
 
 function formatDate(date: string): string {
@@ -23,61 +28,44 @@ function formatDate(date: string): string {
 
 @Injectable()
 export class DailyTasksStoreService {
+  constructor(private readonly dbService: DbService) {}
+
   async insertDailyTask(dto: DailyTasksStoreDto): Promise<any> {
-    const model = require('../../../common/model');
-    const database = dto.database;
-    const em_id = dto.em_id;
-    const array = dto.atten_date.split('-');
-    const listTask = dto.list_task;
-    const attenDate = dto.atten_date;
-    const status = dto.status;
+    const { database, em_id, atten_date, list_task, status, id, tenant, emId, start_periode, end_periode } = dto;
+    const array = atten_date.split('-');
     const tahun = `${array[0]}`;
     const convertYear = tahun.substring(2, 4);
     const convertBulan = array[1].padStart(2, '0');
     const namaDatabaseDynamic = `${database}_hrm${convertYear}${convertBulan}`;
-    const connection = await model.createConnection1(namaDatabaseDynamic);
-    let conn;
+    const knex = this.dbService.getConnection(database);
+    let trx;
     try {
-      conn = await connection.getConnection();
-      await conn.beginTransaction();
-      const [cekDaily] = await conn.query(
-        `SELECT id FROM daily_task WHERE tgl_buat = ? AND em_id = ?`,
-        [attenDate, em_id],
+      trx = await knex.transaction();
+      const [cekDaily] = await trx.raw(
+        `SELECT id FROM ${namaDatabaseDynamic}.daily_task WHERE tgl_buat = ? AND em_id = ?`,
+        [atten_date, em_id],
       );
       if (cekDaily.length > 0) {
-        throw new InternalServerErrorException(
-          `Tugas di tanggal ${attenDate} ini sudah tersedia`,
-        );
+        throw new InternalServerErrorException(`Tugas di tanggal ${atten_date} ini sudah tersedia`);
       } else {
-        const queryTask = `INSERT INTO daily_task (em_id, tgl_buat, status_pengajuan) VALUES (?, ?, ?)`;
-        const queryDetail = `INSERT INTO daily_task_detail (judul, rincian, tgl_finish, daily_task_id, status, level) VALUES (?, ?, ?, ?, ?, ?)`;
-        const [task] = await conn.query(queryTask, [em_id, attenDate, status]);
-        const taskId = task.insertId;
-        for (const item of listTask) {
+        const queryTask = `INSERT INTO ${namaDatabaseDynamic}.daily_task (em_id, tgl_buat, status_pengajuan) VALUES (?, ?, ?)`;
+        const [task] = await trx.raw(queryTask, [em_id, atten_date, status]);
+        const taskId = task.insertId || (task[0] && task[0].insertId);
+        const queryDetail = `INSERT INTO ${namaDatabaseDynamic}.daily_task_detail (judul, rincian, tgl_finish, daily_task_id, status, level) VALUES (?, ?, ?, ?, ?, ?)`;
+        for (const item of list_task) {
           const { task, judul, status, level, tgl_finish } = item;
           const tanggal = formatDate(tgl_finish);
-          await conn.query(queryDetail, [
-            judul,
-            task,
-            tanggal,
-            taskId,
-            status.toString(),
-            level,
-          ]);
+          await trx.raw(queryDetail, [judul, task, tanggal, taskId, status.toString(), level]);
         }
       }
-      await conn.commit();
+      await trx.commit();
       return {
         success: true,
         message: 'Data Berhasil Ditambahkan',
       };
     } catch (error) {
-      if (conn) await conn.rollback();
-      throw new InternalServerErrorException(
-        'Gagal menambahkan data: ' + error.message,
-      );
-    } finally {
-      if (conn) conn.release();
+      if (trx) await trx.rollback();
+      throw new InternalServerErrorException('Gagal menambahkan data: ' + error.message);
     }
   }
 }

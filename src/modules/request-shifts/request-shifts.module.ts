@@ -5,6 +5,7 @@ import {
   RequestShiftsUpdateService,
   RequestShiftsDeleteService,
 } from './services';
+import { RequestShiftListService } from './services/request-shift-list.service';
 
 @Module({
   controllers: [RequestShiftsController],
@@ -12,6 +13,7 @@ import {
     RequestShiftsStoreService,
     RequestShiftsUpdateService,
     RequestShiftsDeleteService,
+    RequestShiftListService,
   ],
 })
 export class RequestShiftsModule {}

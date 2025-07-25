@@ -8,17 +8,15 @@ interface DailyTaskListTaskDto {
   id?: string;
   start_periode?: string;
   end_periode?: string;
+  tenant?: string;
+  emId?: string;
 }
 
 @Injectable()
 export class DailyTaskListTaskService {
   async getDailyTask(dto: DailyTaskListTaskDto): Promise<any> {
+    const { database, em_id, tahun, bulan, id, start_periode, end_periode, tenant, emId } = dto;
     const model = require('../../../common/model');
-    const database = dto.database;
-    const em_id = dto.em_id;
-    const id = dto.id;
-    const tahun = dto.tahun;
-    const bulan = dto.bulan;
     const convertYear = tahun.substring(2, 4);
     let convertBulan;
     if (bulan.length == 1) {
@@ -27,8 +25,8 @@ export class DailyTaskListTaskService {
       convertBulan = bulan;
     }
     let namaDatabaseDynamic = `${database}_hrm${convertYear}${convertBulan}`;
-    const startPeriode = dto.start_periode || '2024-02-03';
-    const endPeriode = dto.end_periode || '2024-02-03';
+    const startPeriode = start_periode || '2024-02-03';
+    const endPeriode = end_periode || '2024-02-03';
     const date1 = new Date(startPeriode);
     const date2 = new Date(endPeriode);
     const montStart = date1.getMonth() + 1;

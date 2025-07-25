@@ -1,8 +1,7 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import { DbService } from '../../../config/database.service';
+import { getDateNow } from '../../../common/utils';
+import { NotificationService } from '../../../common/notification.service';
 
 interface FieldAssigmentsStoreDto {
   database: string;
@@ -10,14 +9,20 @@ interface FieldAssigmentsStoreDto {
   menu_name?: string;
   activity_name?: string;
   created_by?: string;
+  tenant?: string;
+  emId?: string;
+  start_periode?: string;
+  end_periode?: string;
   [key: string]: any;
 }
 
-const model = require('../../../common/model');
-const utility = require('../../../common/utility');
-
 @Injectable()
 export class FieldAssigmentsStoreService {
+  constructor(
+    private readonly dbService: DbService,
+    private readonly notificationService: NotificationService
+  ) {}
+
   async store(dto: FieldAssigmentsStoreDto): Promise<any> {
     const {
       database,
@@ -25,9 +30,13 @@ export class FieldAssigmentsStoreService {
       menu_name,
       activity_name,
       created_by,
+      tenant,
+      emId,
+      start_periode,
+      end_periode,
       ...bodyValue
     } = dto;
-    const dateNow = utility.dateNow4();
+    const dateNow = getDateNow();
     const array = dateNow.split('-');
     const tahun = `${array[0]}`;
     const convertYear = tahun.substring(2, 4);
@@ -47,29 +56,28 @@ export class FieldAssigmentsStoreService {
       createdUserID: created_by,
     };
     bodyValue.tgl_ajuan = dateNow;
-    let conn;
+    const knex = this.dbService.getConnection(database);
+    let trx;
     try {
-      const connection = await model.createConnection1(databaseMaster);
-      conn = await connection.getConnection();
-      await conn.beginTransaction();
-      const [results] = await conn.query(
+      trx = await knex.transaction();
+      const [results] = await trx.raw(
         `SELECT * FROM ${namaDatabaseDynamic}.emp_labor  WHERE nomor_ajuan='${nomor_ajuan}'`,
       );
       if (results.length > 0) {
         throw new BadRequestException('Nomor ajuan sudah ada');
       }
-      await conn.query(script, [bodyValue]);
-      await conn.query(
+      await trx.raw(script, [bodyValue]);
+      await trx.raw(
         `INSERT INTO ${namaDatabaseDynamic}.logs_actvity SET ?;`,
         [dataInsertLog],
       );
-      const [transaksi] = await conn.query(
+      const [transaksi] = await trx.raw(
         `SELECT * FROM ${namaDatabaseDynamic}.emp_labor WHERE nomor_ajuan='${nomor_ajuan}'`,
       );
-      const [employee] = await conn.query(
+      const [employee] = await trx.raw(
         `SELECT * FROM ${databaseMaster}.employee WHERE em_id='${transaksi[0].em_id}'`,
       );
-      const [sysdata] = await conn.query(
+      const [sysdata] = await trx.raw(
         `SELECT * FROM sysdata WHERE kode='034'`,
       );
       const delegationIds = employee[0].em_report_to
@@ -92,41 +100,41 @@ export class FieldAssigmentsStoreService {
           ),
         ]),
       ];
-      utility.insertNotifikasi(
-        combinedIds,
-        'Approval Tugas Luar',
-        'TugasLuar',
-        employee[0].em_id,
-        transaksi[0].id,
-        transaksi[0].nomor_ajuan,
-        employee[0].full_name,
-        namaDatabaseDynamic,
-        databaseMaster,
-      );
+      // TODO: Implement notification using NotificationService
+      // await this.notificationService.insertNotification(
+      //   combinedIds.join(','),
+      //   'Approval Tugas Luar',
+      //   'TugasLuar',
+      //   employee[0].em_id,
+      //   transaksi[0].id,
+      //   transaksi[0].nomor_ajuan,
+      //   employee[0].full_name,
+      //   namaDatabaseDynamic,
+      //   databaseMaster,
+      // );
       if (sysdata.length > 0 && sysdata[0].name != null) {
-        utility.insertNotifikasi(
-          sysdata[0].name,
-          'Pengajuan Tugas Luar',
-          'TugasLuar',
-          employee[0].em_id,
-          null,
-          transaksi[0].nomor_ajuan,
-          employee[0].full_name,
-          namaDatabaseDynamic,
-          databaseMaster,
-        );
+        // TODO: Implement notification using NotificationService
+        // await this.notificationService.insertNotification(
+        //   sysdata[0].name,
+        //   'Pengajuan Tugas Luar',
+        //   'TugasLuar',
+        //   employee[0].em_id,
+        //   null,
+        //   transaksi[0].nomor_ajuan,
+        //   employee[0].full_name,
+        //   namaDatabaseDynamic,
+        //   databaseMaster,
+        // );
       }
-      await conn.commit();
+      await trx.commit();
       return {
         status: true,
         message: 'Berhasil tambah data tugas luar',
         data: transaksi,
       };
     } catch (e) {
-      if (conn) await conn.rollback();
+      if (trx) await trx.rollback();
       throw new InternalServerErrorException(e);
-    } finally {
-      if (conn) await conn.release();
     }
   }
 }

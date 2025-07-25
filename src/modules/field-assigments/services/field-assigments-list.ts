@@ -1,8 +1,5 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import { DbService } from '../../../config/database.service';
 
 interface FieldAssigmentsListDto {
   database: string;
@@ -12,13 +9,15 @@ interface FieldAssigmentsListDto {
   branch_id?: string;
   start_periode?: string;
   end_periode?: string;
+  tenant?: string;
+  emId?: string;
   [key: string]: any;
 }
 
-const model = require('../../../common/model');
-
 @Injectable()
 export class FieldAssigmentsListService {
+  constructor(private readonly dbService: DbService) {}
+
   async list(dto: FieldAssigmentsListDto): Promise<any> {
     const {
       database,
@@ -28,6 +27,8 @@ export class FieldAssigmentsListService {
       branch_id,
       start_periode,
       end_periode,
+      tenant,
+      emId,
     } = dto;
     const convertYear = tahun.substring(2, 4);
     let convertBulan;
@@ -47,11 +48,10 @@ export class FieldAssigmentsListService {
     let date2 = new Date(endPeriode);
     const montStart = date1.getMonth() + 1;
     const monthEnd = date2.getMonth() + 1;
-    let conn;
+    const knex = this.dbService.getConnection(database);
+    let trx;
     try {
-      const connection = await model.createConnection1(`${database}_hrm`);
-      conn = await connection.getConnection();
-      await conn.beginTransaction();
+      trx = await knex.transaction();
       let url;
       if (true) {
         // Sederhanakan, logika bisa dioptimasi
@@ -60,18 +60,16 @@ export class FieldAssigmentsListService {
           url = `SELECT emp_labor.id as idd, emp_labor.status as leave_status, ${startPeriodeDynamic}.emp_labor.*,overtime.name as type ,overtime.dinilai FROM ${startPeriodeDynamic}.emp_labor LEFT JOIN ${database}_hrm.overtime ON overtime.id=emp_labor.typeId WHERE em_id='${em_id}' AND status_transaksi=1  AND (tgl_ajuan>='${startPeriode}' AND tgl_ajuan<='${endPeriode}')  AND branch_id='${branch_id}'  UNION ALL SELECT emp_labor.id as idd, emp_labor.status as leave_status, ${endPeriodeDynamic}.emp_labor.*,overtime.name as type ,overtime.dinilai FROM ${endPeriodeDynamic}.emp_labor LEFT JOIN ${database}_hrm.overtime ON overtime.id=emp_labor.typeId WHERE em_id='${em_id}' AND status_transaksi=1 AND ( tgl_ajuan<='${endPeriode}')  AND branch_id='${branch_id}' ORDER BY idd`;
         }
       }
-      const [results] = await conn.query(url);
-      await conn.commit();
+      const [results] = await trx.raw(url);
+      await trx.commit();
       return {
         status: true,
         message: 'Berhasil ambil data tugas luar',
         data: results,
       };
     } catch (e) {
-      if (conn) await conn.rollback();
+      if (trx) await trx.rollback();
       throw new InternalServerErrorException(e);
-    } finally {
-      if (conn) await conn.release();
     }
   }
 }
