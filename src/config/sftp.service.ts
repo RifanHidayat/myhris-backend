@@ -1,14 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
-import SftpClient from 'ssh2-sftp-client';
 
 @Injectable()
 export class SftpService {
   private readonly logger = new Logger(SftpService.name);
-  private sftp: SftpClient;
+  private sftp: any;
 
   constructor(private configService: ConfigService) {
+    // Use require instead of import to avoid constructor issues
+    const SftpClient = require('ssh2-sftp-client');
     this.sftp = new SftpClient();
   }
 

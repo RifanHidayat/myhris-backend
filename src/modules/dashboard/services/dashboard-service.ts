@@ -84,7 +84,7 @@ export class DashboardService {
     emId: string;
     branchId: string;
   }): Promise<any> {
-    console.log('Masuk function employee/detail');
+    console.log('Masuk function Dashboard/detail');
     const date = getDateNow();
     const tenant = dto.tenant;
     const emId = dto.emId;
@@ -97,11 +97,11 @@ export class DashboardService {
    SELECT * FROM menu_dashboard_user JOIN menu_dashboard ON menu_dashboard.id = menu_dashboard_user.menu_id  WHERE menu_dashboard_user.em_id='${emId}'
   `;
     const defaultMenuQuery = `
-  SELECT * FROM menu_dashboard'
+  SELECT * FROM menu_dashboard
   `;
     const menuDashboardUserUtama = `SELECT * FROM menu_dashboard_utama_user JOIN menu_dashboard_utama ON menu_dashboard_utama.id = menu_dashboard_utama_user.menu_id  WHERE menu_dashboard_utama_user.em_id='${emId}'`;
     const defaultMenuQueryUtama = `
- SELECT * FROM menu_dashboard_utama'
+ SELECT * FROM menu_dashboard_utama
  `;
     const queryWaktuKerja = `SELECT work_schedule.time_in,work_schedule.time_out FROM ${databasePeriode}.emp_shift JOIN .work_schedule ON emp_shift.work_id=work_schedule.id AND atten_date='${dateNow}' AND em_id='${emId}'`;
     const queryUlta = `SELECT em_id,full_name, job_title, em_birthday, em_mobile, em_image FROM employee WHERE DATE_FORMAT(em_birthday, '%m')=DATE_FORMAT('${dateNow}', '%m') AND employee.status='ACTIVE' ORDER BY DATE_FORMAT(em_birthday, "%d") ASC`;
@@ -120,9 +120,12 @@ export class DashboardService {
     const queryNotice = `SELECT * FROM notice`;
 
     const knex = this.dbService.getConnection(tenant);
+    let trx;
+    
     try {
+      trx = await knex.transaction();
+      
       //employee
-      const trx = await knex.transaction();
       // Get menu keja
       const waktuKerja = (await trx.raw(queryWaktuKerja)) as
         | { rows?: Waktukerja[] }
@@ -239,7 +242,7 @@ export class DashboardService {
 
       //-------------------------------------------------------------------
       // place coordinate
-      const sysDataRow = await trx<SysData>('sysdata')
+      const sysDataRow = await trx('sysdata')
         .select('name')
         .where('kode', '013')
         .first();
@@ -269,7 +272,8 @@ export class DashboardService {
       const tugasLuarRows: { nomor_ajuan: string }[] = Array.isArray(rawResult)
         ? rawResult[0]
         : (rawResult.rows ?? []);
-      const employee = await trx<Employee>('employee')
+        
+      const employee = await trx('employee')
         .select('places', 'dep_id')
         .where('em_id', dto.emId)
         .first();
@@ -286,11 +290,11 @@ export class DashboardService {
         const nomorAjuan = tugasLuarRows[0].nomor_ajuan;
         const kodeTrx = nomorAjuan.substring(0, 2);
 
-        coordinates = await trx<PlaceCoordinate>('places_coordinate')
+        coordinates = await trx('places_coordinate')
           .where('trx', kodeTrx)
           .orWhereIn('ID', placesArray);
       } else {
-        coordinates = await trx<PlaceCoordinate>('places_coordinate').whereIn(
+        coordinates = await trx('places_coordinate').whereIn(
           'ID',
           placesArray,
         );
@@ -415,6 +419,9 @@ export class DashboardService {
       }
       results[0].sisa_kontrak_format = formatSisaKontrak;
       results[0].lama_bekerja_format = formatLamaBekerja;
+      
+      await trx.commit();
+      
       return {
         status: true,
         message: 'Success get employee detail',
@@ -429,13 +436,10 @@ export class DashboardService {
         menus: menuDashboardUser,
       };
 
-      await trx.commit();
-      return finalData;
-    } catch {
-      // trx bisa undefined jika error sebelum assignment
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      // if (typeof trx !== 'undefined') await trx.rollback();
-      throw new InternalServerErrorException('Terjadi kesalahan: ');
+    } catch (error) {
+      if (trx) await trx.rollback();
+      console.error('Dashboard service error:', error);
+      throw new InternalServerErrorException('Terjadi kesalahan: ' + error.message);
     }
   }
 }

@@ -16,7 +16,7 @@ export class LogActivitySearchService {
   async pencarian_aktifitas(dto: {
     database: string;
     em_id: string;
-    cari: string;
+    search: string;
     start_periode: string;
     end_periode: string;
   }): Promise<LogActivitySearchResult> {
@@ -24,18 +24,33 @@ export class LogActivitySearchService {
     
     const database = dto.database;
     const em_id = dto.em_id;
-    const cari = dto.cari;
-    let startDb= formatDbName(database, dto.start_periode);
-    let endDb= formatDbName(database, dto.end_periode);
+    const search = dto.search;
+    const startPeriode = dto.start_periode;
+    const endPeriode = dto.end_periode;
+    let startDb= formatDbName(startPeriode, database);
+    let endDb= formatDbName(endPeriode, database);
+    const date1 = new Date(startPeriode);
+    const date2 = new Date(endPeriode);
+    
+    const montStart = date1.getMonth() + 1;
+    const monthEnd = date2.getMonth() + 1;
 
     
     const knex = this.dbService.getConnection(database);
     try {
       const trx = await knex.transaction();
       
-      const [results] = await trx.raw(
-        `SELECT * FROM ${endDb}.logs_actvity WHERE createdUserID='${em_id}' AND menu_name LIKE '%${cari}%' ORDER BY idx DESC`
-      );
+      let query=
+        `SELECT * FROM ${endDb}.logs_actvity WHERE createdUserID='${em_id}' AND menu_name LIKE '%${search}%' ORDER BY idx DESC`
+        if (montStart < monthEnd || date1.getFullYear() < date2.getFullYear()) {
+          query= `SELECT atten_date FROM ${startDb}.attendance WHERE em_id='${em_id}' AND atttype='1' AND  (atten_date>='${startPeriode}' AND atten_date<='${endPeriode}')  
+          UNION 
+          SELECT atten_date FROM ${endDb}.attendance WHERE em_id='${em_id}' AND atttype='1' AND  (atten_date>='${startPeriode}' AND atten_date<='${endPeriode}')  
+          `;
+        }
+        const [results] = await trx.raw(
+         query
+        );
       
       await trx.commit();
       

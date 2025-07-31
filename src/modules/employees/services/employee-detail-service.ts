@@ -37,6 +37,7 @@ export class EmployeeDetailService {
 
   async detail(dto: { tenant: string; emId: string }): Promise<any> {
     console.log('Masuk function employee/detail');
+    console.log('dto', dto.tenant);
     const databasePeriode = formatDbNameNow(dto.tenant);
     const database = databaseMaster(dto.tenant);
     const dateNow = getDateNow();
@@ -81,19 +82,26 @@ export class EmployeeDetailService {
         GROUP BY a.em_id
     `;
 
-    const knex = this.dbService.getConnection(tenant);
+    const knex = this.dbService.getConnection(database);
+    let trx;
+    
     try {
-      const trx = await knex.transaction();
+      trx = await knex.transaction();
+      
       const rawResults = (await trx.raw(query)) as
         | { rows?: EmployeeDetailResult[] }
         | EmployeeDetailResult[][];
-      console.log(rawResults[0]);
+      console.log('Raw results:', rawResults[0]);
+      
       if (!Array.isArray(rawResults[0]) || rawResults[0].length === 0) {
+        await trx.rollback();
         throw new NotFoundException('Employee not found');
       }
+      
       const results: EmployeeDetailResult[] = Array.isArray(rawResults)
         ? rawResults[0]
         : (rawResults.rows ?? []);
+        
       const queryHistory = `SELECT * FROM employee_history WHERE em_id='${emId}' ORDER BY id DESC`;
       const rawHistory = (await trx.raw(queryHistory)) as
         | { rows?: EmployeeHistoryResult[] }
@@ -101,12 +109,14 @@ export class EmployeeDetailService {
       const history: EmployeeHistoryResult[] = Array.isArray(rawHistory)
         ? rawHistory[0]
         : (rawHistory.rows ?? []);
+        
       const rawDepartment = (await trx.raw(
         `SELECT * FROM department WHERE id='${results[0].dep_id}'`,
       )) as { rows?: DepartmentResult[] } | DepartmentResult[][];
       const department: DepartmentResult[] = Array.isArray(rawDepartment)
         ? rawDepartment[0]
         : (rawDepartment.rows ?? []);
+        
       const getDaysDifference = (endDate: string) => {
         const end = new Date(endDate);
         if (isNaN(end.getTime())) return 0;
@@ -114,6 +124,7 @@ export class EmployeeDetailService {
         const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
         return diffInDays + 1;
       };
+      
       if (history.length > 0) {
         results[0].em_status = history[0].description;
         results[0].tanggal_berakhir_kontrak = history[0].end_date;
@@ -125,6 +136,7 @@ export class EmployeeDetailService {
           results[0].sisa_kontrak = sisaKontrak.toString();
         }
       }
+      
       if (
         results[0].tipe_absen == '' ||
         results[0].tipe_absen == '0' ||
@@ -133,6 +145,7 @@ export class EmployeeDetailService {
       ) {
         results[0].tipe_absen = department[0]?.tipe_absen;
       }
+      
       const totalDays = parseInt(results[0].lama_bekerja);
       const result = convertDaysToYMD(totalDays);
       let formatLamaBekerja = '';
@@ -145,6 +158,7 @@ export class EmployeeDetailService {
           formatLamaBekerja = `${result.hari} Hari`;
         }
       }
+      
       const totalDaysKontrak = parseInt(results[0].sisa_kontrak);
       const result1 = convertDaysToYMD(totalDaysKontrak);
       let formatSisaKontrak = '';
@@ -157,22 +171,25 @@ export class EmployeeDetailService {
           formatSisaKontrak = `${result1.hari} hr`;
         }
       }
+      
       if (totalDaysKontrak == 0) {
         formatSisaKontrak = '';
       }
+      
       results[0].sisa_kontrak_format = formatSisaKontrak;
       results[0].lama_bekerja_format = formatLamaBekerja;
+      
       await trx.commit();
+      
       return {
         status: true,
         message: 'Success get employee detail',
         data: results,
       };
-    } catch {
-      // trx bisa undefined jika error sebelum assignment
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      // if (typeof trx !== 'undefined') await trx.rollback();
-      throw new InternalServerErrorException('Terjadi kesalahan: ');
+    } catch (error) {
+      if (trx) await trx.rollback();
+      console.error('Employee detail service error:', error);
+      throw new InternalServerErrorException('Terjadi kesalahan: ' + error.message);
     }
   }
 }

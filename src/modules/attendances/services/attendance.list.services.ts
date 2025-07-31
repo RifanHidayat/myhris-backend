@@ -41,14 +41,15 @@ export class AttendanceListService {
     //const result2: any[] = [...]; // data dari query/perhitungan
 
     const knex = this.dbService.getConnection(tenant);
+    let trx;
     try {
       //employee
-      const trx = await knex.transaction();
+      trx = await knex.transaction();
       // place coordinate
-      const sysDataRow = await trx<SysData>('sysdata')
+      const sysDataRow = await trx('sysdata')
         .select('name')
         .where('kode', '013')
-        .first();
+        .first() as SysData | undefined;
 
       const statusApprove =
         String(sysDataRow?.name) === '1' ? 'Approve' : 'Approve2';
@@ -70,7 +71,7 @@ export class AttendanceListService {
       (SELECT b.name FROM ${dbstart}.emp_leave JOIN leave_types b ON emp_leave.typeid=b.id WHERE em_id='${emId}' AND date_selected  LIKE CONCAT('%',DateRange.date,'%')  AND ajuan='1' AND leave_status='${statusApprove}' LIMIT 1) AS cuti ,
       (SELECT b.name FROM ${dbstart}.emp_leave JOIN leave_types b ON emp_leave.typeid=b.id  WHERE em_id='${emId}' AND date_selected LIKE CONCAT('%',DateRange.date,'%') AND ajuan='2' AND leave_status='${statusApprove}'  LIMIT 1) AS sakit ,
       (SELECT b.name FROM ${dbstart}.emp_leave JOIN leave_types b ON emp_leave.typeid=b.id  WHERE em_id='${emId}' AND date_selected LIKE CONCAT('%',DateRange.date,'%') AND ajuan='3' AND leave_status='${statusApprove}'  LIMIT 1) AS izin ,
-      (SELECT nomor_ajuan FROM ${dbstart}.emp_leave WHERE em_id='${emId}' AND date_selected LIKE '%DateRange.date%' AND ajuan='4' AND leave_status='${statusApprove}' LIMIT 1) AS dinas_luar ,
+      (SELECT nomor_ajuan FROM ${dbstart}.emp_leave WHERE em_id='${emId}' AND date_selected LIKE CONCAT('%',DateRange.date,'%') AND ajuan='4' AND leave_status='${statusApprove}' LIMIT 1) AS dinas_luar ,
       (SELECT  IFNULL(off_date ,0) FROM ${dbstart}.emp_shift WHERE em_id='${emId}' AND atten_date LIKE DateRange.date) AS off_date,
       
       IFNULL((SELECT  IFNULL(work_schedule.time_in ,attendance.signin_time) FROM ${dbstart}.emp_shift LEFT JOIN work_schedule ON emp_shift.work_id=work_schedule.id WHERE emp_shift.em_id='${endPeriode}' AND emp_shift.atten_date LIKE DateRange.date) ,'08:31:00')AS jam_kerja,
@@ -99,7 +100,7 @@ export class AttendanceListService {
       (SELECT b.name FROM ${dbEnd}.emp_leave JOIN leave_types b ON emp_leave.typeid=b.id WHERE em_id='${emId}' AND date_selected  LIKE CONCAT('%',DateRange.date,'%')  AND ajuan='1' AND leave_status='${statusApprove}' LIMIT 1) AS cuti ,
       (SELECT b.name FROM ${dbEnd}.emp_leave JOIN leave_types b ON emp_leave.typeid=b.id  WHERE em_id='${emId}' AND date_selected LIKE CONCAT('%',DateRange.date,'%') AND ajuan='2' AND leave_status='${statusApprove}'  LIMIT 1) AS sakit ,
       (SELECT b.name FROM ${dbEnd}.emp_leave JOIN leave_types b ON emp_leave.typeid=b.id  WHERE em_id='${emId}' AND date_selected LIKE CONCAT('%',DateRange.date,'%') AND ajuan='3' AND leave_status='${statusApprove}'  LIMIT 1) AS izin ,
-      (SELECT nomor_ajuan FROM ${dbEnd}.emp_leave WHERE em_id='${emId}' AND date_selected LIKE '%DateRange.date%' AND ajuan='4' AND leave_status='${statusApprove}' LIMIT 1) AS dinas_luar ,
+      (SELECT nomor_ajuan FROM ${dbEnd}.emp_leave WHERE em_id='${emId}' AND date_selected LIKE CONCAT('%',DateRange.date,'%') AND ajuan='4' AND leave_status='${statusApprove}' LIMIT 1) AS dinas_luar ,
       (SELECT  IFNULL(off_date ,0) FROM ${dbEnd}.emp_shift WHERE em_id='${emId}' AND atten_date LIKE DateRange.date) AS off_date,
       
       IFNULL((SELECT  IFNULL(work_schedule.time_in ,attendance.signin_time) FROM ${dbEnd}.emp_shift LEFT JOIN work_schedule ON emp_shift.work_id=work_schedule.id WHERE emp_shift.em_id='${endPeriode}' AND emp_shift.atten_date LIKE DateRange.date) ,'08:31:00')AS jam_kerja,
@@ -108,7 +109,7 @@ export class AttendanceListService {
       FROM DateRange 
       LEFT JOIN ${dbEnd}.attendance ON attendance.atten_date=DateRange.date AND em_id='${emId}'
       LEFT JOIN holiday_date ON holiday_date.holiday_date=DateRange.date LEFT JOIN holiday ON holiday.id=holiday_date.holiday_id
-      WHERE DateRange.date <=CURDATE()  AND DateRange.date<='${startPeriode}'
+      WHERE DateRange.date <=CURDATE()  AND DateRange.date<='${endPeriode}'
       ORDER BY DateRange.date DESC;
  `;
 
@@ -139,19 +140,20 @@ export class AttendanceListService {
           attendanceResult2.push(attendanceResult1[i]);
         }
       }
+      console.log("attendanceResult2", query2);
 
       // ----------------------------------------------------------------------------------
       await trx.commit();
       return {
         status: true,
-        message: 'Success get employee detail',
-        data: attendanceResult2,
+        message: 'Success get attendance',
+        data: attendanceResult2
       };
-    } catch {
+    } catch (error) {
       // trx bisa undefined jika error sebelum assignment
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      // if (typeof trx !== 'undefined') await trx.rollback();
-      throw new InternalServerErrorException('Terjadi kesalahan: ');
+      if (trx) await trx.rollback();
+      console.error('Error in attendance list service:', error);
+      throw new InternalServerErrorException('Terjadi kesalahan: ' + error.message);
     }
   }
 }

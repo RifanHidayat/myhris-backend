@@ -16,7 +16,10 @@ export class ImboxLoadDataCutiService {
   async loadDataCuti(dto: {
     database: string;
     em_id: string;
-    
+    branch_id?: string;
+    bulan?: string;
+    tahun?: string;
+    status?: string;
     start_periode: string;
     end_periode: string;
   }): Promise<ImboxLoadDataCutiResult> {

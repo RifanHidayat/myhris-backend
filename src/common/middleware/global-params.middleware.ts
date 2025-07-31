@@ -12,6 +12,7 @@ export class GlobalParamsMiddleware implements NestMiddleware {
     
       startPeriode: req.body.startPeriode || req.headers['x-start-periode'] || req.query.startPeriode,
       endPeriode: req.body.endPeriode || req.headers['x-end-periode'] || req.query.endPeriode,
+      
     };
     next();
   }

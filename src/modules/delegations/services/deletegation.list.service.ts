@@ -15,9 +15,14 @@ export class DelegationListService {
       const data1 = result[0]['em_report_to'].split(',');
       const data2 = result[0]['em_report2_to'].split(',');
       const finalData = data1.concat(data2);
+      // const employee = await trx('employee')
+      //   .whereIn('em_id', finalData)
+      //   .orderBy('full_name', 'asc');
       const employee = await trx('employee')
-        .whereIn('em_id', finalData)
-        .orderBy('full_name', 'asc');
+    .select('em_id', 'full_name', 'branch_id', 'em_hak_akses')
+   .whereIn('em_id', finalData)
+   .orderBy('full_name', 'asc');
+
       await trx.commit();
       return {
         status: true,

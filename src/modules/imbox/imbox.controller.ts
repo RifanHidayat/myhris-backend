@@ -3,19 +3,19 @@ import { ImboxLoadInfoService } from './services/imbox-load-info.service';
 import { ImboxLoadNotifikasiService } from './services/imbox-load-notifikasi.service';
 import { ImboxLoadNotifikasiApprovalService } from './services/imbox-load-notifikasi-approval-service';
 import { ImboxSpesifikApprovalMultiService, SpesifikApprovalMultiDto } from './services/imbox-spesifik-approval-multi.service';
-import { ImboxLoadDataCutiService as ImboxLoadDataWfhService } from './services/imbox-load-data-wfh.service';
-import { ImboxLoadDataCutiService as ImboxLoadDataCutiService_ } from './services/imbox-load-data-cuti.service';
-import { ImboxLoadDataCutiService as ImboxLoadDataLoanService } from './services/imbox-load-data-loan.service';
-import { ImboxLoadDataCutiService as ImboxLoadDataClaimService } from './services/imbox-load-data-claim-service';
-import { ImboxLoadDataCutiService as ImboxLoadDataDayOffService } from './services/imbox-load-data-day-off.service';
-import { ImboxLoadDataCutiService as ImboxLoadDataPayslipService } from './services/imbox-load-data-payslip.service';
-import { ImboxLoadDataCutiService as ImboxLoadDataOvertimeService } from './services/imbox-load-data-overtime.service';
-import { ImboxLoadDataCutiService as ImboxLoadDataAttendanceService } from './services/imbox-load-data-attendance.service';
-import { ImboxLoadDataCutiService as ImboxLoadDataPermissionService } from './services/imbox-load-data-permission.service';
-import { ImboxLoadDataCutiService as ImboxLoadDataOfficialDutyService } from './services/imbox-load-data-official-duty.service';
-import { ImboxLoadDataCutiService as ImboxLoadDataVerbalWarmingsService } from './services/imbox-load-data-verbal-warmings.service';
-import { ImboxLoadDataCutiService as ImboxLoadDataWarningLetterService } from './services/imbox-load-data-warning-letter.service';
-import { ImboxLoadDataCutiService as ImboxLoadDataFieldAssignmentsService } from './services/imbox-load-data-field-assignments.service';
+import { ImboxLoadDataWfhService } from './services/imbox-load-data-wfh.service';
+import { ImboxLoadDataCutiService } from './services/imbox-load-data-cuti.service';
+import { ImboxLoadDataLoanService } from './services/imbox-load-data-loan.service';
+import { ImboxLoadDataClaimService } from './services/imbox-load-data-claim-service';
+import { ImboxLoadDataDayOffService } from './services/imbox-load-data-day-off.service';
+import { ImboxLoadDataPayslipService } from './services/imbox-load-data-payslip.service';
+import { ImboxLoadDataOvertimeService } from './services/imbox-load-data-overtime.service';
+import { ImboxLoadDataAttendanceService } from './services/imbox-load-data-attendance.service';
+import { ImboxLoadDataPermissionService } from './services/imbox-load-data-permission.service';
+import { ImboxLoadDataOfficialDutyService } from './services/imbox-load-data-official-duty.service';
+import { ImboxLoadDataVerbalWarmingsService } from './services/imbox-load-data-verbal-warmings.service';
+import { ImboxLoadDataWarningLetterService } from './services/imbox-load-data-warning-letter.service';
+import { ImboxLoadDataFieldAssignmentsService } from './services/imbox-load-data-field-assignments.service';
 
 // Local interfaces to resolve linter errors
 interface ImboxLoadInfoResultLocal {
@@ -57,7 +57,7 @@ export class ImboxController {
     private readonly imboxSpesifikApprovalMultiService: ImboxSpesifikApprovalMultiService,
     private readonly imboxLoadDataOfficialDutyService: ImboxLoadDataOfficialDutyService,
     private readonly imboxLoadDataWfhService: ImboxLoadDataWfhService,
-    private readonly imboxLoadDataCutiService: ImboxLoadDataCutiService_,
+    private readonly imboxLoadDataCutiService: ImboxLoadDataCutiService,
     private readonly imboxLoadDataLoanService: ImboxLoadDataLoanService,
     private readonly imboxLoadDataClaimService: ImboxLoadDataClaimService,
     private readonly imboxLoadDataDayOffService: ImboxLoadDataDayOffService,

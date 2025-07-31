@@ -202,7 +202,6 @@ export class NotificationService {
       );
 
       const employees = await Promise.all(employeeQueries);
-      const insertQueries = [];
 
       for (const employee of employees) {
         if (employee) {
@@ -218,9 +217,7 @@ export class NotificationService {
             em_id_pengajuan: emIdPengajuan,
           };
 
-          insertQueries.push(
-            trx(`${databasePeriode}.notifikasi`).insert(insertData),
-          );
+          await trx(`${databasePeriode}.notifikasi`).insert(insertData);
 
           // Kirim notifikasi FCM global
           await this.fcmService.sendGlobalNotification(
@@ -235,7 +232,6 @@ export class NotificationService {
         }
       }
 
-      await Promise.all(insertQueries);
       await trx.commit();
       this.logger.log(
         'Global notification transaction completed successfully!',

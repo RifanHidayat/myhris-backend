@@ -96,3 +96,188 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+# MyHRIS Backend
+
+A NestJS-based HR Information System backend API.
+
+## Installation
+
+```bash
+npm install
+```
+
+## Running the app
+
+```bash
+# development
+npm run start
+
+# watch mode
+npm run start:dev
+
+# production mode
+npm run start:prod
+```
+
+## Test
+
+```bash
+# unit tests
+npm run test
+
+# e2e tests
+npm run test:e2e
+
+# test coverage
+npm run test:cov
+```
+
+## API Documentation
+
+### Attendance Endpoints
+
+#### Submit Attendance (FormData)
+**POST** `/attendances/submit`
+
+Submit attendance with image upload using FormData.
+
+**Headers:**
+- `Authorization: Bearer <token>`
+- `Content-Type: multipart/form-data`
+
+**Query Parameters:**
+- `tenant` (required): Database tenant
+- `em_id` (required): Employee ID
+- `start_periode` (optional): Start period
+- `end_periode` (optional): End period
+
+**FormData Fields:**
+- `image` (optional): Image file (PNG, JPG, etc.)
+- `tanggal_absen` (optional): Attendance date (YYYY-MM-DD)
+- `reg_type` (required): Registration type (0 = no image, 1 = with image)
+- `type_attendance` (optional): Attendance type (1 = check-in, 2 = check-out)
+- `location` (optional): Location string
+- `note` (optional): Attendance note
+- `lat_lang` (optional): Latitude and longitude
+- `place` (optional): Place name
+- `category` (optional): Attendance category
+
+**Example Request:**
+```bash
+curl -X POST "http://localhost:3000/attendances/submit?tenant=company&em_id=EMP001" \
+  -H "Authorization: Bearer <token>" \
+  -F "image=@photo.png" \
+  -F "reg_type=1" \
+  -F "type_attendance=1" \
+  -F "location=Office Building" \
+  -F "note=Check in for work" \
+  -F "lat_lang=-6.2088,106.8456" \
+  -F "place=Main Office"
+```
+
+#### Submit Attendance Break (FormData)
+**POST** `/attendances/submit-break`
+
+Submit break attendance with image upload using FormData.
+
+**Headers:**
+- `Authorization: Bearer <token>`
+- `Content-Type: multipart/form-data`
+
+**Query Parameters:**
+- `tenant` (required): Database tenant
+- `em_id` (required): Employee ID
+- `start_periode` (optional): Start period
+- `end_periode` (optional): End period
+
+**FormData Fields:**
+- `image` (optional): Image file (PNG, JPG, etc.)
+- `tanggal_absen` (optional): Attendance date (YYYY-MM-DD)
+- `reg_type` (required): Registration type (0 = no image, 1 = with image)
+- `type_attendance` (optional): Attendance type (1 = break-in, 2 = break-out)
+- `location` (optional): Location string
+- `note` (optional): Attendance note
+- `lat_lang` (optional): Latitude and longitude
+- `place` (optional): Place name
+- `category` (optional): Attendance category
+
+**Example Request:**
+```bash
+curl -X POST "http://localhost:3000/attendances/submit-break?tenant=company&em_id=EMP001" \
+  -H "Authorization: Bearer <token>" \
+  -F "image=@break_photo.png" \
+  -F "reg_type=1" \
+  -F "type_attendance=1" \
+  -F "location=Cafeteria" \
+  -F "note=Break time" \
+  -F "lat_lang=-6.2088,106.8456" \
+  -F "place=Cafeteria"
+```
+
+### Response Format
+
+Both endpoints return the same response format:
+
+```json
+{
+  "status": true,
+  "message": "berhasil kirim absen",
+  "title": "",
+  "is_show_notif": false,
+  "deskription": "",
+  "status_absen": "",
+  "data": {
+    "em_id": "EMP001",
+    "atten_date": "2024-01-15",
+    "signin_time": "08:00:00",
+    "signout_time": "00:00:00",
+    "place_in": "Main Office",
+    "place_out": "",
+    "signin_longlat": "-6.2088,106.8456",
+    "signout_longlat": "",
+    "signin_pict": "abc123150120240800.png",
+    "signout_pict": "",
+    "signin_note": "Check in for work",
+    "signout_note": "",
+    "signin_addr": "Office Building",
+    "signout_addr": "",
+    "atttype": 0,
+    "reg_type": 1,
+    "image_uploaded": true,
+    "image_path": "/foto_absen/company/abc123150120240800.png",
+    "original_filename": "photo.png",
+    "file_size": 1024000
+  }
+}
+```
+
+### Features
+
+- **Image Upload**: Automatic image upload to FTP server
+- **Late Detection**: Automatic late attendance detection
+- **Overtime Calculation**: Automatic overtime calculation
+- **Warning Letters**: Automatic warning letter generation for repeated violations
+- **Break Management**: Separate break-in/break-out tracking
+- **Location Tracking**: GPS coordinates and place tracking
+- **Multi-tenant**: Support for multiple company databases
+
+### Error Handling
+
+The API returns proper error responses:
+
+```json
+{
+  "statusCode": 400,
+  "message": "tenant dan em_id harus disediakan",
+  "error": "Bad Request"
+}
+```
+
+```json
+{
+  "statusCode": 500,
+  "message": "Gagal kirim absen",
+  "error": "Internal Server Error"
+}
+```

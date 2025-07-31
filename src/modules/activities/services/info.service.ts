@@ -18,27 +18,22 @@ export class InfoService {
   constructor(private readonly dbService: DbService) {}
 
   async info_aktifitas_employee(dto: {
-    database: string;
+    tenant: string;
     em_id: string;
-    bulan: string;
-    tahun: string;
-    start_date?: string;
-    end_date?: string;
     start_periode: string;
     end_periode: string;
   }): Promise<InfoActivityResult> {
     console.log("-----info aktifitas employee---------- ", dto);
     
-    const database = dto.database;
+    const database = dto.tenant;
     const em_id = dto.em_id;
-    const getbulan = dto.bulan;
-    const gettahun = dto.tahun;
-
-    const tahun = `${gettahun}`;
-    const convertYear = tahun.substring(2, 4);
-    let startDb= formatDbName(database, dto.start_periode);
-    let endDb= formatDbName(database, dto.end_periode);
-    
+    const startPeriode = dto.start_periode;
+    const endPeriode = dto.end_periode;
+  
+   
+    let startDb= formatDbName(startPeriode,database);
+    let endDb= formatDbName(endPeriode, database);
+ 
     const date1 = new Date(startPeriode);
     const date2 = new Date(endPeriode);
     
@@ -49,15 +44,14 @@ export class InfoService {
 
     }
 
-    const namaDatabaseDynamic = `${database}_hrm${convertYear}${convertBulan}`;
-
-    let query_masuk_kerja = `SELECT atten_date FROM ${startDb}.attendance WHERE em_id='${em_id}' AND atttype='1'`;
-    let query_izin = `SELECT COUNT(*) as jumlah_izin FROM ${startDb}.emp_leave WHERE em_id='${em_id}' AND status_transaksi='1' AND ajuan='3'`;
-    let query_sakit = `SELECT COUNT(*) as jumlah_sakit FROM ${startDb}.emp_leave WHERE em_id='${em_id}' AND status_transaksi='1' AND ajuan='2'`;
-    let query_cuti = `SELECT COUNT(*) as jumlah_cuti FROM ${startDb}.emp_leave WHERE em_id='${em_id}' AND status_transaksi='1' AND ajuan='1'`;
-    let query_lembur = `SELECT COUNT(*) as jumlah_lembur FROM ${startDb}.emp_labor WHERE em_id='${em_id}' AND ajuan='1'`;
-    let query_masuk_wfh = `SELECT COUNT(*) as jumlah_masuk_wfh FROM ${startDb}.attendance WHERE em_id='${em_id}' AND place_in='WFH'`;
-    let query_absen_tepat_waktu = `SELECT signin_time FROM ${startDb}.attendance WHERE em_id='CLD SISCOM' AND atttype='1'`;
+  
+    let query_masuk_kerja = `SELECT atten_date FROM ${endDb}.attendance WHERE em_id='${em_id}' AND atttype='1'`;
+    let query_izin = `SELECT COUNT(*) as jumlah_izin FROM ${endDb}.emp_leave WHERE em_id='${em_id}' AND status_transaksi='1' AND ajuan='3'`;
+    let query_sakit = `SELECT COUNT(*) as jumlah_sakit FROM ${endDb}.emp_leave WHERE em_id='${em_id}' AND status_transaksi='1' AND ajuan='2'`;
+    let query_cuti = `SELECT COUNT(*) as jumlah_cuti FROM ${endDb}.emp_leave WHERE em_id='${em_id}' AND status_transaksi='1' AND ajuan='1'`;
+    let query_lembur = `SELECT COUNT(*) as jumlah_lembur FROM ${endDb}.emp_labor WHERE em_id='${em_id}' AND ajuan='1'`;
+    let query_masuk_wfh = `SELECT COUNT(*) as jumlah_masuk_wfh FROM ${endDb}.attendance WHERE em_id='${em_id}' AND place_in='WFH'`;
+    let query_absen_tepat_waktu = `SELECT signin_time FROM ${endDb}.attendance WHERE em_id='CLD SISCOM' AND atttype='1'`;
 
     let query_jumlah_kerja = `SELECT IFNULL( workday,'22') as workday FROM ${database}_hrm.employee WHERE em_id='${em_id}'`;
 
@@ -81,9 +75,9 @@ export class InfoService {
       SELECT COUNT(*) as jumlah_sakit FROM ${endDb}.emp_leave WHERE em_id='${em_id}' AND status_transaksi='1' AND ajuan='2'  AND  (atten_date>='${startPeriode}' AND atten_date<='${endPeriode}')
       `;
 
-      query_cuti = `SELECT COUNT(*) as jumlah_cuti FROM ${namaDatabaseDynamic}.emp_leave WHERE em_id='${em_id}' AND status_transaksi='1' AND ajuan='1'   AND  (atten_date>='${startPeriode}' AND atten_date<='${endPeriode}')
+      query_cuti = `SELECT COUNT(*) as jumlah_cuti FROM ${startDb}.emp_leave WHERE em_id='${em_id}' AND status_transaksi='1' AND ajuan='1'   AND  (atten_date>='${startPeriode}' AND atten_date<='${endPeriode}')
       UNION 
-      SELECT COUNT(*) as jumlah_cuti FROM ${namaDatabaseDynamic}.emp_leave WHERE em_id='${em_id}' AND status_transaksi='1' AND ajuan='1'   AND  (atten_date>='${startPeriode}' AND atten_date<='${endPeriode}')
+      SELECT COUNT(*) as jumlah_cuti FROM ${endDb}.emp_leave WHERE em_id='${em_id}' AND status_transaksi='1' AND ajuan='1'   AND  (atten_date>='${startPeriode}' AND atten_date<='${endPeriode}')
       
       `;
 
@@ -104,21 +98,38 @@ export class InfoService {
     try {
       const trx = await knex.transaction();
       
-      const [results] = await trx.raw(
-        `${query_masuk_kerja};${query_izin};${query_sakit};${query_cuti};${query_lembur};${query_masuk_wfh};${query_absen_tepat_waktu};${query_jumlah_kerja}`
-      );
-
+      // Execute all queries concurrently using Promise.all()
+      const [
+        [masukKerja],
+        [izin],
+        [sakit],
+        [cuti],
+        [lembur],
+        [masukWfh],
+        [absenTepatWaktu],
+        
+      ] = await Promise.all([
+        trx.raw(query_masuk_kerja),
+        trx.raw(query_izin),
+        trx.raw(query_sakit),
+        trx.raw(query_cuti),
+        trx.raw(query_lembur),
+        trx.raw(query_masuk_wfh),
+        trx.raw(query_absen_tepat_waktu),
+        
+      ]);
+     
       await trx.commit();
       
       return {
-        data_izin: results[1] || [],
-        data_sakit: results[2] || [],
-        data_cuti: results[3] || [],
-        data_lembur: results[4] || [],
-        data_masukwfh: results[5] || [],
-        data_absentepatwaktu: results[6] || [],
+        data_izin: izin || [],
+        data_sakit: sakit || [],
+        data_cuti: cuti || [],
+        data_lembur: lembur || [],
+        data_masukwfh: masukWfh || [],
+        data_absentepatwaktu: absenTepatWaktu || [],
         data_employee: "22",
-        data_masuk_kerja: results[0] || [],
+        data_masuk_kerja: masukKerja || [],
       };
     } catch (error) {
       console.error("error", error);

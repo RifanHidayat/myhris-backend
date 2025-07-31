@@ -8,12 +8,12 @@ import { Request, Response, NextFunction } from 'express';
 @Injectable()
 export class HeaderContextMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
-    const tenant = req.headers['x-tenant-id'] as string;
-    const startPeriod = req.headers['x-start-period'] as string;
-    const endPeriod = req.headers['x-end-period'] as string;
+    const tenant = req.query.tenant as string;
+    const startPeriod = req.query.start_periode as string;
+    const endPeriod = req.query.end_periode as string;
 
     if (!tenant) {
-      throw new BadRequestException('Tenant header tidak ditemukan');
+      throw new BadRequestException('Tenant tidak ditemukan');
     }
 
     req.tenant = tenant;

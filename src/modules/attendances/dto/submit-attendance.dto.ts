@@ -2,23 +2,14 @@ import {
   IsString,
   IsOptional,
   IsNumber,
-  IsDateString,
   IsNotEmpty,
-  IsDefined,
 } from 'class-validator';
 
+// DTO untuk regular attendance submission (check-in/check-out)
 export class SubmitAttendanceDto {
   @IsString()
   @IsNotEmpty()
-  database: string;
-
-  @IsString()
-  @IsNotEmpty()
-  em_id: string;
-
-  @IsString()
-  @IsNotEmpty()
-  tanggal_absen: string;
+  date: string;
 
   @IsNumber()
   @IsNotEmpty()
@@ -26,19 +17,19 @@ export class SubmitAttendanceDto {
 
   @IsOptional()
   @IsString()
-  gambar?: string;
+  image?: string;
 
   @IsOptional()
   @IsString()
-  lokasi?: string;
+  location?: string;
 
   @IsOptional()
   @IsString()
-  catatan?: string;
+  note?: string;
 
   @IsOptional()
   @IsString()
-  latLang?: string;
+  lat_lang?: string;
 
   @IsOptional()
   @IsString()
@@ -46,27 +37,47 @@ export class SubmitAttendanceDto {
 
   @IsOptional()
   @IsString()
-  kategori?: string;
+  category?: string;
 
   @IsOptional()
   @IsString()
-  typeAbsen?: string;
+  type_attendance?: string;
+}
+
+// DTO untuk FormData attendance submission (check-in/check-out)
+export class SubmitAttendanceFormDataDto {
+  @IsOptional()
+  @IsString()
+  date?: string; // Changed from tanggal_absen to date, optional
+
+  @IsNumber()
+  @IsNotEmpty()
+  reg_type: number;
 
   @IsOptional()
   @IsString()
-  start_date?: string;
+  type_attendance?: string;
 
   @IsOptional()
   @IsString()
-  end_date?: string;
+  location?: string;
 
   @IsOptional()
   @IsString()
-  start_time?: string;
+  note?: string;
 
   @IsOptional()
   @IsString()
-  end_time?: string;
+  lat_lang?: string;
 
-  // Tambahkan field lain sesuai kebutuhan dari body request
+  @IsOptional()
+  @IsString()
+  place?: string;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  // File upload akan ditangani oleh FileInterceptor
+  // image?: Express.Multer.File;
 }

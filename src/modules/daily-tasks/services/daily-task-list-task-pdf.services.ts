@@ -1,5 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { DbService } from '../../../config/database.service';
+import { Response } from 'express';
 
 interface DailyTaskListTaskPdfDto {
   database: string;
@@ -17,7 +18,9 @@ interface DailyTaskListTaskPdfDto {
 export class DailyTaskListTaskPdfService {
   constructor(private readonly dbService: DbService) {}
 
-  async getDailyTaskPDF(dto: DailyTaskListTaskPdfDto): Promise<any> {
+
+
+  async streamDailyTaskPDF(dto: DailyTaskListTaskPdfDto, res: Response): Promise<void> {
     const { database, em_id, tahun, bulan, id, start_periode, end_periode, tenant, emId } = dto;
     const convertYear = tahun.substring(2, 4);
     let convertBulan;
@@ -37,21 +40,87 @@ export class DailyTaskListTaskPdfService {
       const endPeriodeDynamic = `${database}_hrm${endPeriode.substring(2, 4)}${endPeriode.split('-')[1]}`;
       namaDatabaseDynamic = endPeriodeDynamic;
     }
+    
     const knex = this.dbService.getConnection(database);
     let trx;
     try {
       trx = await knex.transaction();
-      const query = `SELECT dt.tgl_buat, dt.em_id, dtd.judul, dtd.rincian, dtd.status, dtd.tgl_finish, dtd.level, e.full_name, e.job_title AS posisi, d.name AS jabatan, dep.name AS divisi FROM ${namaDatabaseDynamic}.daily_task dt INNER JOIN ${namaDatabaseDynamic}.daily_task_detail dtd ON dt.id = dtd.daily_task_id INNER JOIN employee e ON dt.em_id = e.em_id INNER JOIN department dep ON e.dep_id = dep.id INNER JOIN designation d ON e.des_id = d.id WHERE dt.em_id = ? AND dt.status_pengajuan = 'post' ORDER BY dt.tgl_buat ASC`;
+      
+      // Get employee info and tasks
+      const query = `
+        SELECT 
+          dt.tgl_buat, 
+          dt.em_id, 
+          dtd.judul, 
+          dtd.rincian, 
+          dtd.status, 
+          dtd.tgl_finish, 
+          dtd.level, 
+          e.full_name, 
+          e.job_title AS posisi, 
+          d.name AS jabatan, 
+          dep.name AS divisi 
+        FROM ${namaDatabaseDynamic}.daily_task dt 
+        INNER JOIN ${namaDatabaseDynamic}.daily_task_detail dtd ON dt.id = dtd.daily_task_id 
+        INNER JOIN employee e ON dt.em_id = e.em_id 
+        INNER JOIN department dep ON e.dep_id = dep.id 
+        INNER JOIN designation d ON e.des_id = d.id 
+        WHERE dt.em_id = ? AND dt.status_pengajuan = 'post' 
+        ORDER BY dt.tgl_buat ASC, dtd.level ASC
+      `;
+      
       const [result] = await trx.raw(query, [em_id]);
       await trx.commit();
-      return {
-        success: true,
-        message: 'Successfully get data',
-        data: result,
-      };
+      
+      if (result.length === 0) {
+        res.status(404).json({
+          status: false,
+          message: 'Tidak ada data tugas harian untuk periode ini'
+        });
+        return;
+      }
+      
+      // Set response headers for PDF
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="daily-tasks-${em_id}-${startPeriode}-${endPeriode}.pdf"`);
+      
+      // Create PDF content as text (simplified version)
+      const pdfContent = this.generatePDFContent(result, em_id, startPeriode, endPeriode);
+      
+      // Send PDF content
+      res.send(pdfContent);
+      
     } catch (error) {
       if (trx) await trx.rollback();
-      throw new InternalServerErrorException('Gagal mendapatkan data AllDailyTask: ' + error.message);
+      res.status(500).json({
+        status: false,
+        message: 'Gagal generate PDF: ' + error.message
+      });
     }
+  }
+
+  private generatePDFContent(data: any[], emId: string, startDate: string, endDate: string): string {
+    let content = `DAILY TASK REPORT\n`;
+    content += `Employee ID: ${emId}\n`;
+    content += `Period: ${startDate} to ${endDate}\n`;
+    content += `Generated: ${new Date().toLocaleDateString()}\n\n`;
+    
+    let currentDate = '';
+    data.forEach((task, index) => {
+      if (task.tgl_buat !== currentDate) {
+        currentDate = task.tgl_buat;
+        content += `\n=== ${currentDate} ===\n`;
+      }
+      
+      content += `${task.level}. ${task.judul}\n`;
+      content += `   Detail: ${task.rincian}\n`;
+      content += `   Status: ${task.status === '1' ? 'Completed' : 'Pending'}\n`;
+      if (task.tgl_finish) {
+        content += `   Finish Date: ${task.tgl_finish}\n`;
+      }
+      content += `\n`;
+    });
+    
+    return content;
   }
 }

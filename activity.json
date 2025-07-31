@@ -1,0 +1,246 @@
+{
+  "info": {
+    "name": "Activities Controller API",
+    "description": "Postman collection for Activities Controller endpoints with JWT authentication",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "database",
+      "value": "net",
+      "type": "string"
+    },
+    {
+      "key": "em_id",
+      "value": "EMP001",
+      "type": "string"
+    },
+    {
+      "key": "start_periode",
+      "value": "2024-01-01",
+      "type": "string"
+    },
+    {
+      "key": "end_periode",
+      "value": "2024-12-31",
+      "type": "string"
+    },
+    {
+      "key": "search_keyword",
+      "value": "login",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5ldGNlbGxpbmRvamJpQGdtYWlsLmNvbSIsInRlbmFudCI6Im5ldCIsImlhdCI6MTc1MzY4MTU5NiwiZXhwIjoxNzUzNjg1MTk2fQ.t-EMoigH5mNoAqZYw9sHEsAMGpQu68A9dh8c5mmSosI",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Info Activity",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/activities/info-activity?tenant={{database}}&em_id={{em_id}}&start_periode={{start_periode}}&end_periode={{end_periode}}",
+          "host": ["{{base_url}}"],
+          "path": ["activities", "info-activity"],
+          "query": [
+            {
+              "key": "tenant",
+              "value": "{{database}}",
+              "description": "Database tenant"
+            },
+            {
+              "key": "em_id",
+              "value": "{{em_id}}",
+              "description": "Employee ID"
+            },
+            {
+              "key": "start_periode",
+              "value": "{{start_periode}}",
+              "description": "Start period (YYYY-MM-DD)"
+            },
+            {
+              "key": "end_periode",
+              "value": "{{end_periode}}",
+              "description": "End period (YYYY-MM-DD)"
+            }
+          ]
+        },
+        "description": "Get employee activity information with JWT authentication"
+      },
+      "response": []
+    },
+    {
+      "name": "2. Log Activity Search",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"search_criteria\": \"optional_search_criteria\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/activities/log-activity-search?tenant={{database}}&em_id={{em_id}}&start_periode={{start_periode}}&end_periode={{end_periode}}&search={{search_keyword}}",
+          "host": ["{{base_url}}"],
+          "path": ["activities", "log-activity-search"],
+          "query": [
+            {
+              "key": "tenant",
+              "value": "{{database}}",
+              "description": "Database tenant"
+            },
+            {
+              "key": "em_id",
+              "value": "{{em_id}}",
+              "description": "Employee ID"
+            },
+            {
+              "key": "start_periode",
+              "value": "{{start_periode}}",
+              "description": "Start period (YYYY-MM-DD)"
+            },
+            {
+              "key": "end_periode",
+              "value": "{{end_periode}}",
+              "description": "End period (YYYY-MM-DD)"
+            },
+            {
+              "key": "search",
+              "value": "{{search_keyword}}",
+              "description": "Search keyword"
+            }
+          ]
+        },
+        "description": "Search log activities with JWT authentication"
+      },
+      "response": []
+    },
+    {
+      "name": "3. Example Global Params",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/activities/example-global-params?tenant={{database}}&em_id={{em_id}}&start_periode={{start_periode}}&end_periode={{end_periode}}",
+          "host": ["{{base_url}}"],
+          "path": ["activities", "example-global-params"],
+          "query": [
+            {
+              "key": "tenant",
+              "value": "{{database}}",
+              "description": "Database tenant"
+            },
+            {
+              "key": "em_id",
+              "value": "{{em_id}}",
+              "description": "Employee ID"
+            },
+            {
+              "key": "start_periode",
+              "value": "{{start_periode}}",
+              "description": "Start period (YYYY-MM-DD)"
+            },
+            {
+              "key": "end_periode",
+              "value": "{{end_periode}}",
+              "description": "End period (YYYY-MM-DD)"
+            }
+          ]
+        },
+        "description": "Example endpoint using GlobalQueryParamsDto"
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request script to validate JWT token",
+          "const jwtToken = pm.collectionVariables.get('jwt_token');",
+          "if (!jwtToken) {",
+          "    console.error('JWT token is missing. Please set the jwt_token variable.');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Test script to validate response",
+          "pm.test('Status code is 200', function () {",
+          "    pm.response.to.have.status(200);",
+          "});",
+          "",
+          "pm.test('Response has valid JSON', function () {",
+          "    pm.response.to.be.json;",
+          "});",
+          "",
+          "pm.test('Response time is less than 2000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+          "});",
+          "",
+          "// Check for authentication errors",
+          "if (pm.response.code === 401) {",
+          "    console.error('Authentication failed. Please check your JWT token.');",
+          "}",
+          "",
+          "// Check for validation errors",
+          "if (pm.response.code === 400) {",
+          "    console.error('Bad request. Please check your parameters.');",
+          "}"
+        ]
+      }
+    }
+  ]
+} 

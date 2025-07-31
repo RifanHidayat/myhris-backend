@@ -76,6 +76,7 @@ export class PlaceCoordinateService {
       if (!employee) {
         throw new InternalServerErrorException('Employee tidak ditemukan');
       }
+    
 
       const placesArray = employee.places.split(',');
 
@@ -90,16 +91,17 @@ export class PlaceCoordinateService {
           .orWhereIn('ID', placesArray);
       } else {
         coordinates = await trx<PlaceCoordinate>('places_coordinate').whereIn(
-          'ID',
+          'id',
           placesArray,
         );
       }
+      console.log("coordinates", placesArray);
       // ----------------------------------------------------------------------------------
       await trx.commit();
       return {
         status: true,
         message: 'Success get employee detail',
-        places: coordinates,
+        data: coordinates,
       };
     } catch {
       // trx bisa undefined jika error sebelum assignment

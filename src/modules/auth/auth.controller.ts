@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Headers, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, Headers, UseGuards, Req, BadRequestException, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -10,38 +10,42 @@ export class AuthController {
   @Post('login')
   async login(
     @Body() loginDto: LoginDto,
-    @Headers('x-tenant-id') tenant: string,
-    @Headers('x-start-period') startPeriod: string,
-    @Headers('x-end-period') endPeriod: string,
+    @Query('tenant') tenant: string,
+    @Query('start_periode') startPeriod: string,
+    @Query('end_periode') endPeriod: string,
     @Req() req: any,
   ) {
-    const dtoWithHeaders = {
+    if (!loginDto) throw new BadRequestException('Request body harus diisi');
+    if (!loginDto.email) throw new BadRequestException('Email harus diisi');
+    if (!loginDto.password) throw new BadRequestException('Password harus diisi');
+    if (!tenant) throw new BadRequestException('Tenant harus diisi');
+
+    console.log('AuthController: Login request received');
+    console.log('AuthController: Email:', loginDto.email);
+    console.log('AuthController: Tenant:', tenant);
+    console.log('AuthController: Start period:', startPeriod);
+    console.log('AuthController: End period:', endPeriod);
+
+    const dtoWithParams = {
       ...loginDto,
       tenant,
-      startPeriod,
-      endPeriod,
+      startPeriod: startPeriod || '2024-01-01',
+      endPeriod: endPeriod || '2024-12-31',
     };
 
-    return this.authService.login(dtoWithHeaders);
+    console.log('AuthController: Calling authService.login with:', dtoWithParams);
+
+    return this.authService.login(dtoWithParams);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('database')
   async fetchDatabase(
     @Body() loginDto: LoginDto,
-    @Headers('x-tenant-id') tenant: string,
     @Req() req: any,
   ): Promise<any> {
-    const dtoWithHeaders = {
-      ...loginDto,
-      tenant,
-    };
+    if (!loginDto) throw new BadRequestException('Request body harus diisi');
+    if (!loginDto.email) throw new BadRequestException('Email harus diisi');
 
-    return this.authService.database(dtoWithHeaders);
+    return this.authService.database(loginDto);
   }
-  // Endpoint /database yang benar
-  // @Post('database')
-  // async database(@Body() dto: DatabaseRequestDto) {
-  //   // Implementasi sesuai kebutuhan Anda
-  // }
 }

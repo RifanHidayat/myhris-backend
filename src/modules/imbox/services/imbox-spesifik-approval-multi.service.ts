@@ -1,5 +1,16 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { DbService } from '../../../config/database.service';
+import { ImboxLoadDataPermissionService } from './imbox-load-data-permission.service';
+import { ImboxLoadDataCutiService } from './imbox-load-data-cuti.service';
+import { ImboxLoadDataFieldAssignmentsService } from './imbox-load-data-field-assignments.service';
+import { ImboxLoadDataOfficialDutyService } from './imbox-load-data-official-duty.service';
+import { ImboxLoadDataClaimService } from './imbox-load-data-claim-service';
+import { ImboxLoadDataAttendanceService } from './imbox-load-data-attendance.service';
+import { ImboxLoadDataWfhService } from './imbox-load-data-wfh.service';
+import { ImboxLoadDataLoanService } from './imbox-load-data-loan.service';
+import { ImboxLoadDataWarningLetterService } from './imbox-load-data-warning-letter.service';
+import { ImboxLoadDataVerbalWarmingsService } from './imbox-load-data-verbal-warmings.service';
+import { ImboxLoadDataDayOffService } from './imbox-load-data-day-off.service';
 
 export interface SpesifikApprovalMultiDto {
   database: string;
@@ -24,18 +35,17 @@ export interface SpesifikApprovalMultiResult {
 export class ImboxSpesifikApprovalMultiService {
   constructor(
     private readonly dbService: DbService,
-    private readonly imboxLoadDataPermissionService: any,
-    private readonly imboxLoadDataCutiService: any,
-    private readonly imboxLoadDataFieldAssignmentsService: any,
-    private readonly imboxLoadDataOfficialDutyService: any,
-    private readonly imboxLoadDataClaimService: any,
-    private readonly imboxLoadDataAttendanceService: any,
-    private readonly imboxLoadDataWfhService: any,
-    private readonly imboxLoadDataLoanService: any,
-    private readonly imboxLoadDataWarningLetterService: any,
-    private readonly imboxLoadDataVerbalWarmingsService: any,
-    private readonly imboxLoadDataDayOffService: any,
-    private readonly imboxLoadDataRequestShiftService: any,
+    private readonly imboxLoadDataPermissionService: ImboxLoadDataPermissionService,
+    private readonly imboxLoadDataCutiService: ImboxLoadDataCutiService,
+    private readonly imboxLoadDataFieldAssignmentsService: ImboxLoadDataFieldAssignmentsService,
+    private readonly imboxLoadDataOfficialDutyService: ImboxLoadDataOfficialDutyService,
+    private readonly imboxLoadDataClaimService: ImboxLoadDataClaimService,
+    private readonly imboxLoadDataAttendanceService: ImboxLoadDataAttendanceService,
+    private readonly imboxLoadDataWfhService: ImboxLoadDataWfhService,
+    private readonly imboxLoadDataLoanService: ImboxLoadDataLoanService,
+    private readonly imboxLoadDataWarningLetterService: ImboxLoadDataWarningLetterService,
+    private readonly imboxLoadDataVerbalWarmingsService: ImboxLoadDataVerbalWarmingsService,
+    private readonly imboxLoadDataDayOffService: ImboxLoadDataDayOffService,
   ) {}
 
   async spesifikApprovalMulti(dto: SpesifikApprovalMultiDto): Promise<SpesifikApprovalMultiResult> {
@@ -186,17 +196,6 @@ export class ImboxSpesifikApprovalMultiService {
         });
       } else if (url_data == 'dayoff') {
         result = await this.imboxLoadDataDayOffService.loadDataDayOff({
-          database,
-          em_id,
-          branch_id,
-          bulan: getbulan,
-          tahun: gettahun,
-          status: stauts,
-          start_periode,
-          end_periode
-        });
-      } else if (url_data == 'request_shift') {
-        result = await this.imboxLoadDataRequestShiftService.loadDataRequestShift({
           database,
           em_id,
           branch_id,

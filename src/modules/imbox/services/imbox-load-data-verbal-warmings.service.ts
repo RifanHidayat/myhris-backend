@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { DbService } from '../../../config/database.service';
 import { databaseMaster, formatDbName } from 'src/common/utils';
 
-interface ImboxLoadDataCutiResult {
+interface ImboxLoadDataVerbalWarmingsResult {
   status: boolean;
   message: string;
   jenis: string;
@@ -10,16 +10,19 @@ interface ImboxLoadDataCutiResult {
 }
 
 @Injectable()
-export class ImboxLoadDataCutiService {
+export class ImboxLoadDataVerbalWarmingsService {
   constructor(private readonly dbService: DbService) {}
 
   async loadDataVerbalWarmings(dto: {
     database: string;
     em_id: string;
-    
+    branch_id?: string;
+    bulan?: string;
+    tahun?: string;
+    status?: string;
     start_periode: string;
     end_periode: string;
-  }): Promise<ImboxLoadDataCutiResult> {
+  }): Promise<ImboxLoadDataVerbalWarmingsResult> {
     console.log("-----load data cuti----------");
     
     const database = dto.database;

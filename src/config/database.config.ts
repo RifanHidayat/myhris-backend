@@ -23,9 +23,9 @@ export function createSisAdminDbConfig(): Knex.Config {
   return {
     client: 'mysql2',
     connection: {
-      host: process.env.MY_APP,
-      user: 'pro',
-      password: 'Siscom3519',
+      host: process.env.DB_HOST || process.env.MY_APP || 'localhost',
+      user: process.env.DB_USER || 'pro',
+      password: process.env.DB_PASSWORD || 'Siscom3519',
       database: 'sis_admin',
       timezone: '+00:00',
       multipleStatements: true,

@@ -10,7 +10,26 @@ import { createSisAdminDbConfig } from '../config/database.config';
 export class DbService implements OnModuleDestroy {
   private connections: Map<string, Knex> = new Map();
 
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) {
+    console.log('DbService: Constructor called');
+    console.log('DbService: ConfigService available:', !!this.configService);
+    
+    // Test reading environment variables
+    const host = this.configService.get<string>('DB_HOST');
+    const user = this.configService.get<string>('DB_USER');
+    const password = this.configService.get<string>('DB_PASSWORD');
+    const jwtSecret = this.configService.get<string>('JWT_SECRET');
+    
+    console.log('DbService: Environment variables test:');
+    console.log('DbService: DB_HOST:', host);
+    console.log('DbService: DB_USER:', user);
+    console.log('DbService: DB_PASSWORD:', password ? '***SET***' : '***NOT SET***');
+    console.log('DbService: JWT_SECRET:', jwtSecret ? '***SET***' : '***NOT SET***');
+    
+    // Check if env file is being read
+    console.log('DbService: NODE_ENV:', process.env.NODE_ENV);
+    console.log('DbService: All env vars:', Object.keys(process.env).filter(key => key.includes('DB_') || key.includes('JWT_')));
+  }
 
   getConnection(tenant: string): Knex {
     const dbName = `${tenant}_hrm`; // contoh: tenantA_hrm, tenantB_hrm
@@ -24,6 +43,11 @@ export class DbService implements OnModuleDestroy {
     const host = this.configService.get<string>('DB_HOST') ?? 'localhost';
     const user = this.configService.get<string>('DB_USER') ?? 'root';
     const password = this.configService.get<string>('DB_PASSWORD') ?? '';
+
+    console.log('host', host);
+    console.log('user', user);
+    console.log('password', password);
+    console.log('dbName', dbName);
 
     const config: Knex.Config = createDbConfig(host, user, password, dbName);
     const newConnection = KnexLib(config);

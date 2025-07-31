@@ -2,8 +2,8 @@ import { IsString } from 'class-validator';
 
 export class DatabaseRequestDto {
   @IsString()
-  tenant: string;
+  email: string;
 
   @IsString()
-  email: string;
+  password: string;
 }

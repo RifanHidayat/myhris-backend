@@ -1,0 +1,990 @@
+{
+  "info": {
+    "name": "Attendance API Collection",
+    "description": "Collection untuk API Attendance MyHRIS dengan support FormData untuk upload image",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string",
+      "description": "Base URL untuk API MyHRIS"
+    },
+    {
+      "key": "tenant",
+      "value": "company",
+      "type": "string",
+      "description": "Nama tenant/database"
+    },
+    {
+      "key": "em_id",
+      "value": "EMP001",
+      "type": "string",
+      "description": "Employee ID"
+    },
+    {
+      "key": "branch_id",
+      "value": "BR001",
+      "type": "string",
+      "description": "Branch ID"
+    },
+    {
+      "key": "start_periode",
+      "value": "2024-01-01",
+      "type": "string",
+      "description": "Start periode (YYYY-MM-DD)"
+    },
+    {
+      "key": "end_periode",
+      "value": "2024-01-31",
+      "type": "string",
+      "description": "End periode (YYYY-MM-DD)"
+    },
+    {
+      "key": "auth_token",
+      "value": "your_jwt_token_here",
+      "type": "string",
+      "description": "JWT Authentication Token"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Get All Attendances",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/attendances?tenant={{tenant}}&em_id={{em_id}}&branch_id={{branch_id}}&start_periode={{start_periode}}&end_periode={{end_periode}}",
+          "host": ["{{base_url}}"],
+          "path": ["attendances"],
+          "query": [
+            {
+              "key": "tenant",
+              "value": "{{tenant}}",
+              "description": "Nama tenant/database"
+            },
+            {
+              "key": "em_id",
+              "value": "{{em_id}}",
+              "description": "Employee ID"
+            },
+            {
+              "key": "branch_id",
+              "value": "{{branch_id}}",
+              "description": "Branch ID"
+            },
+            {
+              "key": "start_periode",
+              "value": "{{start_periode}}",
+              "description": "Start periode (YYYY-MM-DD)"
+            },
+            {
+              "key": "end_periode",
+              "value": "{{end_periode}}",
+              "description": "End periode (YYYY-MM-DD)"
+            }
+          ]
+        },
+        "description": "Mengambil semua data attendance berdasarkan periode dan employee"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/attendances?tenant={{tenant}}&em_id={{em_id}}&branch_id={{branch_id}}&start_periode={{start_periode}}&end_periode={{end_periode}}",
+              "host": ["{{base_url}}"],
+              "path": ["attendances"],
+              "query": [
+                {
+                  "key": "tenant",
+                  "value": "{{tenant}}"
+                },
+                {
+                  "key": "em_id",
+                  "value": "{{em_id}}"
+                },
+                {
+                  "key": "branch_id",
+                  "value": "{{branch_id}}"
+                },
+                {
+                  "key": "start_periode",
+                  "value": "{{start_periode}}"
+                },
+                {
+                  "key": "end_periode",
+                  "value": "{{end_periode}}"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"status\": true,\n  \"message\": \"Success get attendance list\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"em_id\": \"EMP001\",\n      \"atten_date\": \"2024-01-15\",\n      \"signin_time\": \"08:00:00\",\n      \"signout_time\": \"17:00:00\",\n      \"place_in\": \"Main Office\",\n      \"place_out\": \"Main Office\",\n      \"signin_longlat\": \"-6.2088,106.8456\",\n      \"signout_longlat\": \"-6.2088,106.8456\",\n      \"signin_pict\": \"abc123150120240800.png\",\n      \"signout_pict\": \"abc123150120241700.png\",\n      \"signin_note\": \"Check in for work\",\n      \"signout_note\": \"Check out from work\",\n      \"signin_addr\": \"Office Building\",\n      \"signout_addr\": \"Office Building\",\n      \"atttype\": 0,\n      \"reg_type\": 1\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "Get Place Coordinates",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/attendances/place-coordinates?tenant={{tenant}}&em_id={{em_id}}&branch_id={{branch_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "place-coordinates"],
+          "query": [
+            {
+              "key": "tenant",
+              "value": "{{tenant}}",
+              "description": "Nama tenant/database"
+            },
+            {
+              "key": "em_id",
+              "value": "{{em_id}}",
+              "description": "Employee ID"
+            },
+            {
+              "key": "branch_id",
+              "value": "{{branch_id}}",
+              "description": "Branch ID"
+            }
+          ]
+        },
+        "description": "Mengambil data koordinat tempat kerja"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/attendances/place-coordinates?tenant={{tenant}}&em_id={{em_id}}&branch_id={{branch_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["attendances", "place-coordinates"],
+              "query": [
+                {
+                  "key": "tenant",
+                  "value": "{{tenant}}"
+                },
+                {
+                  "key": "em_id",
+                  "value": "{{em_id}}"
+                },
+                {
+                  "key": "branch_id",
+                  "value": "{{branch_id}}"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"status\": true,\n  \"message\": \"Success get place coordinates\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"branch_id\": \"BR001\",\n      \"branch_name\": \"Main Office\",\n      \"latitude\": \"-6.2088\",\n      \"longitude\": \"106.8456\",\n      \"radius\": 100,\n      \"address\": \"Jl. Sudirman No. 123, Jakarta\"\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "Get Attendance by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/attendances/1?tenant={{tenant}}",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "1"],
+          "query": [
+            {
+              "key": "tenant",
+              "value": "{{tenant}}",
+              "description": "Nama tenant/database"
+            }
+          ]
+        },
+        "description": "Mengambil data attendance berdasarkan ID"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/attendances/1?tenant={{tenant}}",
+              "host": ["{{base_url}}"],
+              "path": ["attendances", "1"],
+              "query": [
+                {
+                  "key": "tenant",
+                  "value": "{{tenant}}"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"status\": true,\n  \"message\": \"Success get attendance by ID\",\n  \"data\": {\n    \"id\": 1,\n    \"em_id\": \"EMP001\",\n    \"atten_date\": \"2024-01-15\",\n    \"signin_time\": \"08:00:00\",\n    \"signout_time\": \"17:00:00\",\n    \"place_in\": \"Main Office\",\n    \"place_out\": \"Main Office\",\n    \"signin_longlat\": \"-6.2088,106.8456\",\n    \"signout_longlat\": \"-6.2088,106.8456\",\n    \"signin_pict\": \"abc123150120240800.png\",\n    \"signout_pict\": \"abc123150120241700.png\",\n    \"signin_note\": \"Check in for work\",\n    \"signout_note\": \"Check out from work\",\n    \"signin_addr\": \"Office Building\",\n    \"signout_addr\": \"Office Building\",\n    \"atttype\": 0,\n    \"reg_type\": 1\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Update Attendance by ID",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"signin_time\": \"08:30:00\",\n  \"signout_time\": \"17:30:00\",\n  \"place_in\": \"Updated Office\",\n  \"place_out\": \"Updated Office\",\n  \"signin_longlat\": \"-6.2088,106.8456\",\n  \"signout_longlat\": \"-6.2088,106.8456\",\n  \"signin_pict\": \"updated_image.png\",\n  \"signout_pict\": \"updated_image.png\",\n  \"signin_note\": \"Updated check in note\",\n  \"signout_note\": \"Updated check out note\",\n  \"signin_addr\": \"Updated Office Building\",\n  \"signout_addr\": \"Updated Office Building\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/attendances/1?tenant={{tenant}}",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "1"],
+          "query": [
+            {
+              "key": "tenant",
+              "value": "{{tenant}}",
+              "description": "Nama tenant/database"
+            }
+          ]
+        },
+        "description": "Update data attendance berdasarkan ID"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"signin_time\": \"08:30:00\",\n  \"signout_time\": \"17:30:00\",\n  \"place_in\": \"Updated Office\",\n  \"place_out\": \"Updated Office\",\n  \"signin_longlat\": \"-6.2088,106.8456\",\n  \"signout_longlat\": \"-6.2088,106.8456\",\n  \"signin_pict\": \"updated_image.png\",\n  \"signout_pict\": \"updated_image.png\",\n  \"signin_note\": \"Updated check in note\",\n  \"signout_note\": \"Updated check out note\",\n  \"signin_addr\": \"Updated Office Building\",\n  \"signout_addr\": \"Updated Office Building\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/attendances/1?tenant={{tenant}}",
+              "host": ["{{base_url}}"],
+              "path": ["attendances", "1"],
+              "query": [
+                {
+                  "key": "tenant",
+                  "value": "{{tenant}}"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"status\": true,\n  \"message\": \"Success update attendance by ID\",\n  \"data\": {\n    \"id\": 1,\n    \"signin_time\": \"08:30:00\",\n    \"signout_time\": \"17:30:00\",\n    \"place_in\": \"Updated Office\",\n    \"place_out\": \"Updated Office\",\n    \"signin_longlat\": \"-6.2088,106.8456\",\n    \"signout_longlat\": \"-6.2088,106.8456\",\n    \"signin_pict\": \"updated_image.png\",\n    \"signout_pict\": \"updated_image.png\",\n    \"signin_note\": \"Updated check in note\",\n    \"signout_note\": \"Updated check out note\",\n    \"signin_addr\": \"Updated Office Building\",\n    \"signout_addr\": \"Updated Office Building\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Delete Attendance by ID",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/attendances/1?tenant={{tenant}}",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "1"],
+          "query": [
+            {
+              "key": "tenant",
+              "value": "{{tenant}}",
+              "description": "Nama tenant/database"
+            }
+          ]
+        },
+        "description": "Delete data attendance berdasarkan ID"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/attendances/1?tenant={{tenant}}",
+              "host": ["{{base_url}}"],
+              "path": ["attendances", "1"],
+              "query": [
+                {
+                  "key": "tenant",
+                  "value": "{{tenant}}"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"status\": true,\n  \"message\": \"Success delete attendance by ID\",\n  \"data\": {\n    \"id\": 1,\n    \"deleted_count\": 1\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Submit Attendance (Check-in)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "reg_type",
+              "value": "1",
+              "type": "text",
+              "description": "Registration type (0 = no image, 1 = with image)"
+            },
+            {
+              "key": "type_attendance",
+              "value": "1",
+              "type": "text",
+              "description": "Attendance type (1 = check-in, 2 = check-out)"
+            },
+            {
+              "key": "location",
+              "value": "Office Building",
+              "type": "text",
+              "description": "Location string"
+            },
+            {
+              "key": "note",
+              "value": "Check in for work",
+              "type": "text",
+              "description": "Attendance note"
+            },
+            {
+              "key": "lat_lang",
+              "value": "-6.2088,106.8456",
+              "type": "text",
+              "description": "GPS coordinates (latitude,longitude)"
+            },
+            {
+              "key": "place",
+              "value": "Main Office",
+              "type": "text",
+              "description": "Place name"
+            },
+            {
+              "key": "category",
+              "value": "0",
+              "type": "text",
+              "description": "Attendance category"
+            },
+            {
+              "key": "image",
+              "type": "file",
+              "src": [],
+              "description": "Upload image file (PNG, JPG, JPEG)"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/attendances/submit?tenant={{tenant}}&em_id={{em_id}}&start_periode={{start_periode}}&end_periode={{end_periode}}",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "submit"],
+          "query": [
+            {
+              "key": "tenant",
+              "value": "{{tenant}}",
+              "description": "Nama tenant/database"
+            },
+            {
+              "key": "em_id",
+              "value": "{{em_id}}",
+              "description": "Employee ID"
+            },
+            {
+              "key": "start_periode",
+              "value": "{{start_periode}}",
+              "description": "Start periode (YYYY-MM-DD)"
+            },
+            {
+              "key": "end_periode",
+              "value": "{{end_periode}}",
+              "description": "End periode (YYYY-MM-DD)"
+            }
+          ]
+        },
+        "description": "Submit attendance check-in dengan upload gambar"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "reg_type",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "type_attendance",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "location",
+                  "value": "Office Building",
+                  "type": "text"
+                },
+                {
+                  "key": "note",
+                  "value": "Check in for work",
+                  "type": "text"
+                },
+                {
+                  "key": "lat_lang",
+                  "value": "-6.2088,106.8456",
+                  "type": "text"
+                },
+                {
+                  "key": "place",
+                  "value": "Main Office",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/attendances/submit?tenant={{tenant}}&em_id={{em_id}}&start_periode={{start_periode}}&end_periode={{end_periode}}",
+              "host": ["{{base_url}}"],
+              "path": ["attendances", "submit"],
+              "query": [
+                {
+                  "key": "tenant",
+                  "value": "{{tenant}}"
+                },
+                {
+                  "key": "em_id",
+                  "value": "{{em_id}}"
+                },
+                {
+                  "key": "start_periode",
+                  "value": "{{start_periode}}"
+                },
+                {
+                  "key": "end_periode",
+                  "value": "{{end_periode}}"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"status\": true,\n  \"message\": \"berhasil kirim absen\",\n  \"title\": \"\",\n  \"is_show_notif\": false,\n  \"deskription\": \"\",\n  \"status_absen\": \"\",\n  \"data\": {\n    \"em_id\": \"EMP001\",\n    \"atten_date\": \"2024-01-15\",\n    \"signin_time\": \"08:00:00\",\n    \"signout_time\": \"00:00:00\",\n    \"place_in\": \"Main Office\",\n    \"place_out\": \"\",\n    \"signin_longlat\": \"-6.2088,106.8456\",\n    \"signout_longlat\": \"\",\n    \"signin_pict\": \"abc123150120240800.png\",\n    \"signout_pict\": \"\",\n    \"signin_note\": \"Check in for work\",\n    \"signout_note\": \"\",\n    \"signin_addr\": \"Office Building\",\n    \"signout_addr\": \"\",\n    \"atttype\": 0,\n    \"reg_type\": 1,\n    \"image_uploaded\": true,\n    \"image_path\": \"/foto_absen/company/abc123150120240800.png\",\n    \"original_filename\": \"photo.png\",\n    \"file_size\": 1024000\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Submit Attendance (Check-out)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "reg_type",
+              "value": "1",
+              "type": "text",
+              "description": "Registration type (0 = no image, 1 = with image)"
+            },
+            {
+              "key": "type_attendance",
+              "value": "2",
+              "type": "text",
+              "description": "Attendance type (1 = check-in, 2 = check-out)"
+            },
+            {
+              "key": "location",
+              "value": "Office Building",
+              "type": "text",
+              "description": "Location string"
+            },
+            {
+              "key": "note",
+              "value": "Check out from work",
+              "type": "text",
+              "description": "Attendance note"
+            },
+            {
+              "key": "lat_lang",
+              "value": "-6.2088,106.8456",
+              "type": "text",
+              "description": "GPS coordinates (latitude,longitude)"
+            },
+            {
+              "key": "place",
+              "value": "Main Office",
+              "type": "text",
+              "description": "Place name"
+            },
+            {
+              "key": "category",
+              "value": "0",
+              "type": "text",
+              "description": "Attendance category"
+            },
+            {
+              "key": "image",
+              "type": "file",
+              "src": [],
+              "description": "Upload image file (PNG, JPG, JPEG)"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/attendances/submit?tenant={{tenant}}&em_id={{em_id}}&start_periode={{start_periode}}&end_periode={{end_periode}}",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "submit"],
+          "query": [
+            {
+              "key": "tenant",
+              "value": "{{tenant}}",
+              "description": "Nama tenant/database"
+            },
+            {
+              "key": "em_id",
+              "value": "{{em_id}}",
+              "description": "Employee ID"
+            },
+            {
+              "key": "start_periode",
+              "value": "{{start_periode}}",
+              "description": "Start periode (YYYY-MM-DD)"
+            },
+            {
+              "key": "end_periode",
+              "value": "{{end_periode}}",
+              "description": "End periode (YYYY-MM-DD)"
+            }
+          ]
+        },
+        "description": "Submit attendance check-out dengan upload gambar"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "reg_type",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "type_attendance",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "location",
+                  "value": "Office Building",
+                  "type": "text"
+                },
+                {
+                  "key": "note",
+                  "value": "Check out from work",
+                  "type": "text"
+                },
+                {
+                  "key": "lat_lang",
+                  "value": "-6.2088,106.8456",
+                  "type": "text"
+                },
+                {
+                  "key": "place",
+                  "value": "Main Office",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/attendances/submit?tenant={{tenant}}&em_id={{em_id}}&start_periode={{start_periode}}&end_periode={{end_periode}}",
+              "host": ["{{base_url}}"],
+              "path": ["attendances", "submit"],
+              "query": [
+                {
+                  "key": "tenant",
+                  "value": "{{tenant}}"
+                },
+                {
+                  "key": "em_id",
+                  "value": "{{em_id}}"
+                },
+                {
+                  "key": "start_periode",
+                  "value": "{{start_periode}}"
+                },
+                {
+                  "key": "end_periode",
+                  "value": "{{end_periode}}"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"status\": true,\n  \"message\": \"berhasil kirim absen\",\n  \"title\": \"\",\n  \"is_show_notif\": false,\n  \"deskription\": \"\",\n  \"status_absen\": \"\",\n  \"data\": {\n    \"em_id\": \"EMP001\",\n    \"atten_date\": \"2024-01-15\",\n    \"signin_time\": \"08:00:00\",\n    \"signout_time\": \"17:00:00\",\n    \"place_in\": \"Main Office\",\n    \"place_out\": \"Main Office\",\n    \"signin_longlat\": \"-6.2088,106.8456\",\n    \"signout_longlat\": \"-6.2088,106.8456\",\n    \"signin_pict\": \"abc123150120240800.png\",\n    \"signout_pict\": \"abc123150120241700.png\",\n    \"signin_note\": \"Check in for work\",\n    \"signout_note\": \"Check out from work\",\n    \"signin_addr\": \"Office Building\",\n    \"signout_addr\": \"Office Building\",\n    \"atttype\": 0,\n    \"reg_type\": 1,\n    \"image_uploaded\": true,\n    \"image_path\": \"/foto_absen/company/abc123150120241700.png\",\n    \"original_filename\": \"photo.png\",\n    \"file_size\": 1024000\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Submit Attendance Break",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "tanggal_absen",
+              "value": "2024-01-15",
+              "type": "text",
+              "description": "Tanggal absen (YYYY-MM-DD)"
+            },
+            {
+              "key": "reg_type",
+              "value": "1",
+              "type": "text",
+              "description": "Registration type (0 = no image, 1 = with image)"
+            },
+            {
+              "key": "type_attendance",
+              "value": "1",
+              "type": "text",
+              "description": "Attendance type (1 = check-in, 2 = check-out)"
+            },
+            {
+              "key": "location",
+              "value": "Office Building",
+              "type": "text",
+              "description": "Location string"
+            },
+            {
+              "key": "note",
+              "value": "Break time",
+              "type": "text",
+              "description": "Break note"
+            },
+            {
+              "key": "lat_lang",
+              "value": "-6.2088,106.8456",
+              "type": "text",
+              "description": "GPS coordinates (latitude,longitude)"
+            },
+            {
+              "key": "place",
+              "value": "Main Office",
+              "type": "text",
+              "description": "Place name"
+            },
+            {
+              "key": "category",
+              "value": "0",
+              "type": "text",
+              "description": "Attendance category"
+            },
+            {
+              "key": "image",
+              "type": "file",
+              "src": [],
+              "description": "Upload image file (PNG, JPG, JPEG)"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/attendances/submit-break?tenant={{tenant}}&em_id={{em_id}}&start_periode={{start_periode}}&end_periode={{end_periode}}",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "submit-break"],
+          "query": [
+            {
+              "key": "tenant",
+              "value": "{{tenant}}",
+              "description": "Nama tenant/database"
+            },
+            {
+              "key": "em_id",
+              "value": "{{em_id}}",
+              "description": "Employee ID"
+            },
+            {
+              "key": "start_periode",
+              "value": "{{start_periode}}",
+              "description": "Start periode (YYYY-MM-DD)"
+            },
+            {
+              "key": "end_periode",
+              "value": "{{end_periode}}",
+              "description": "End periode (YYYY-MM-DD)"
+            }
+          ]
+        },
+        "description": "Submit attendance break dengan upload gambar"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tanggal_absen",
+                  "value": "2024-01-15",
+                  "type": "text"
+                },
+                {
+                  "key": "reg_type",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "type_attendance",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "location",
+                  "value": "Office Building",
+                  "type": "text"
+                },
+                {
+                  "key": "note",
+                  "value": "Break time",
+                  "type": "text"
+                },
+                {
+                  "key": "lat_lang",
+                  "value": "-6.2088,106.8456",
+              "type": "text"
+                },
+                {
+                  "key": "place",
+                  "value": "Main Office",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/attendances/submit-break?tenant={{tenant}}&em_id={{em_id}}&start_periode={{start_periode}}&end_periode={{end_periode}}",
+              "host": ["{{base_url}}"],
+              "path": ["attendances", "submit-break"],
+              "query": [
+                {
+                  "key": "tenant",
+                  "value": "{{tenant}}"
+                },
+                {
+                  "key": "em_id",
+                  "value": "{{em_id}}"
+                },
+                {
+                  "key": "start_periode",
+                  "value": "{{start_periode}}"
+                },
+                {
+                  "key": "end_periode",
+                  "value": "{{end_periode}}"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"status\": true,\n  \"message\": \"berhasil kirim absen break\",\n  \"title\": \"\",\n  \"is_show_notif\": false,\n  \"deskription\": \"\",\n  \"status_absen\": \"\",\n  \"data\": {\n    \"em_id\": \"EMP001\",\n    \"atten_date\": \"2024-01-15\",\n    \"signin_time\": \"12:00:00\",\n    \"signout_time\": \"13:00:00\",\n    \"place_in\": \"Main Office\",\n    \"place_out\": \"Main Office\",\n    \"signin_longlat\": \"-6.2088,106.8456\",\n    \"signout_longlat\": \"-6.2088,106.8456\",\n    \"signin_pict\": \"abc123150120241200.png\",\n    \"signout_pict\": \"abc123150120241300.png\",\n    \"signin_note\": \"Break time\",\n    \"signout_note\": \"Break time\",\n    \"signin_addr\": \"Office Building\",\n    \"signout_addr\": \"Office Building\",\n    \"atttype\": 0,\n    \"reg_type\": 1,\n    \"image_uploaded\": true,\n    \"image_path\": \"/foto_absen/company/abc123150120241200.png\",\n    \"original_filename\": \"photo.png\",\n    \"file_size\": 1024000\n  }\n}"
+        }
+      ]
+    }
+  ]
+} 

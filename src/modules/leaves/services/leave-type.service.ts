@@ -1,48 +1,67 @@
-async tipeCuti(req, res) {
-  
-    var database = req.query.database;
-    var email = req.query.email;
-    var periode = req.body.periode;
-    var emId = req.query.em_id;
-    var durasi = req.body.durasi;
-    console.log("durasi ",req.body.durasi);
-    var dates =
-      req.query.dates == undefined ? "2024-08,2024-09" : req.query.dates;
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
-    console.log(req.query);
+interface LeaveTypeDto {
+  database: string;
+  email?: string;
+  periode?: string;
+  em_id?: string;
+  durasi: string;
+  dates?: string;
+  [key: string]: any;
+}
 
-    var query = ``;
+// TODO: Pastikan model diimport dari lokasi yang benar
+const model = require('../../../common/model');
 
-    var datesplits = dates.split(",");
+/**
+ * Service untuk mengambil tipe cuti
+ */
+@Injectable()
+export class LeaveTypeService {
 
-    query = `SELECT * FROM ${database}_hrm.leave_types WHERE (submission_period<='${durasi}'  OR backdate=0 ) AND  status IN (1) `;
+  async tipeCuti(dto: LeaveTypeDto): Promise<any> {
+    const database = dto.database;
+    const email = dto.email;
+    const periode = dto.periode;
+    const emId = dto.em_id;
+    const durasi = dto.durasi;
+    
+    console.log("durasi ", dto.durasi);
+    
+    const dates = dto.dates == undefined ? "2024-08,2024-09" : dto.dates;
+
+    console.log(dto);
+
+    let query = ``;
+
+    const datesplits = dates.split(",");
+
+    query = `SELECT * FROM ${database}_hrm.leave_types WHERE (submission_period<='${durasi}' OR backdate=0) AND status IN (1)`;
     console.log(query);
+    
     const connection = await model.createConnection1(`${database}_hrm`);
     let conn;
+    
     try {
       conn = await connection.getConnection();
-      await conn.beginTransaction;
+      await conn.beginTransaction();
       const [result] = await conn.query(query);
       console.log(result);
       await conn.commit();
-      return res.status(200).send({
+      
+      return {
         status: true,
-        
-        message: "Succsefully get tipe cuti",
+        message: "Successfully get tipe cuti",
         data: result,
-      });
+      };
     } catch (e) {
       if (conn) {
         await conn.rollback();
       }
-      console.error("Error ouy", e);
-      return res.status(400).send({
-        status: false,
-        message: "ERRoe",
-      });
+      console.error("Error out", e);
+      throw new InternalServerErrorException('Gagal ambil data tipe cuti');
     } finally {
       if (conn) await conn.release();
     }
-
- 
-  },
+  }
+}
