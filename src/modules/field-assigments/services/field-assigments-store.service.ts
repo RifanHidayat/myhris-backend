@@ -1,140 +1,145 @@
 import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { DbService } from '../../../config/database.service';
-import { getDateNow } from '../../../common/utils';
-import { NotificationService } from '../../../common/notification.service';
+import { getDateNow, formatDbName, isDifferentPeriod, formatDbNameNow } from '../../../common/utils';
+import { FieldAssigmentsStoreDto } from '../dto/field-assigments.dto';
 
-interface FieldAssigmentsStoreDto {
-  database: string;
-  nomor_ajuan: string;
-  menu_name?: string;
-  activity_name?: string;
-  created_by?: string;
-  tenant?: string;
-  emId?: string;
-  start_periode?: string;
-  end_periode?: string;
-  [key: string]: any;
+/**
+ * Generate next nomor ajuan for field assignments
+ * Format: TL202507{no_urut} where no_urut is 4 digits
+ */
+async function generateNomorAjuan(trx: any, databaseName: string): Promise<string> {
+  try {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    
+    const selectClause = 'SELECT nomor_ajuan';
+    const fromClause = `FROM ${databaseName}.emp_labor`;
+    const whereClause = `WHERE nomor_ajuan IS NOT NULL AND nomor_ajuan != '' AND nomor_ajuan LIKE 'TL${year}${month}%'`;
+    const orderClause = 'ORDER BY nomor_ajuan DESC LIMIT 1';
+    
+    const lastNomorAjuanQuery = `${selectClause} ${fromClause} ${whereClause} ${orderClause}`;
+    
+    const [lastNomorResult] = await trx.raw(lastNomorAjuanQuery);
+    
+    let nextNumber = 1;
+    
+    if (lastNomorResult.length > 0 && lastNomorResult[0].nomor_ajuan) {
+      const lastNomorAjuan = lastNomorResult[0].nomor_ajuan;
+      const match = lastNomorAjuan.match(/TL\d{6}(\d{4})$/);
+      
+      if (match && match[1]) {
+        const lastNumber = parseInt(match[1], 10);
+        nextNumber = lastNumber + 1;
+      }
+    }
+    
+    const nomorAjuan = `TL${year}${month}${nextNumber.toString().padStart(4, '0')}`;
+    console.log(`Generated nomor ajuan: ${nomorAjuan}`);
+    return nomorAjuan;
+    
+  } catch (error) {
+    console.error('Error generating nomor ajuan:', error);
+    throw new Error('Failed to generate nomor ajuan');
+  }
 }
+
+
 
 @Injectable()
 export class FieldAssigmentsStoreService {
-  constructor(
-    private readonly dbService: DbService,
-    private readonly notificationService: NotificationService
-  ) {}
+  constructor(private readonly dbService: DbService) {}
 
   async store(dto: FieldAssigmentsStoreDto): Promise<any> {
-    const {
-      database,
-      nomor_ajuan,
-      menu_name,
-      activity_name,
-      created_by,
-      tenant,
-      emId,
-      start_periode,
-      end_periode,
-      ...bodyValue
-    } = dto;
-    const dateNow = getDateNow();
-    const array = dateNow.split('-');
-    const tahun = `${array[0]}`;
-    const convertYear = tahun.substring(2, 4);
-    let convertBulan;
-    if (array[1].length === 1) {
-      convertBulan = parseInt(array[1], 10) <= 9 ? `0${array[1]}` : array[1];
-    } else {
-      convertBulan = array[1];
-    }
-    const namaDatabaseDynamic = `${database}_hrm${convertYear}${convertBulan}`;
-    const databaseMaster = `${database}_hrm`;
-    const script = `INSERT INTO ${namaDatabaseDynamic}.emp_labor SET ?`;
-    const dataInsertLog = {
-      menu_name,
-      activity_name,
-      acttivity_script: script,
-      createdUserID: created_by,
-    };
-    bodyValue.tgl_ajuan = dateNow;
-    const knex = this.dbService.getConnection(database);
+    const { tenant, em_id, date, start_time, end_time, delegation_id, catatan, created_by, start_periode, end_periode } = dto;
+    
+    const namaDatabaseDynamic = formatDbNameNow(tenant);
+    console.log('Database name:', namaDatabaseDynamic);
+    
+    const knex = this.dbService.getConnection(tenant);
     let trx;
+    
     try {
       trx = await knex.transaction();
-      const [results] = await trx.raw(
-        `SELECT * FROM ${namaDatabaseDynamic}.emp_labor  WHERE nomor_ajuan='${nomor_ajuan}'`,
-      );
-      if (results.length > 0) {
-        throw new BadRequestException('Nomor ajuan sudah ada');
-      }
-      await trx.raw(script, [bodyValue]);
-      await trx.raw(
-        `INSERT INTO ${namaDatabaseDynamic}.logs_actvity SET ?;`,
-        [dataInsertLog],
-      );
-      const [transaksi] = await trx.raw(
-        `SELECT * FROM ${namaDatabaseDynamic}.emp_labor WHERE nomor_ajuan='${nomor_ajuan}'`,
-      );
-      const [employee] = await trx.raw(
-        `SELECT * FROM ${databaseMaster}.employee WHERE em_id='${transaksi[0].em_id}'`,
-      );
-      const [sysdata] = await trx.raw(
-        `SELECT * FROM sysdata WHERE kode='034'`,
-      );
-      const delegationIds = employee[0].em_report_to
-        ? Array.isArray(employee[0].em_report_to)
-          ? employee[0].em_report_to
-          : [employee[0].em_report_to]
-        : [];
-      const emIds = employee[0].em_report2_to
-        ? Array.isArray(employee[0].em_report2_to)
-          ? employee[0].em_report2_to
-          : [employee[0].em_report2_to]
-        : [];
-      const combinedIds = [
-        ...new Set([
-          ...delegationIds.flatMap((id) =>
-            id.split(',').map((i) => i.trim().toUpperCase()),
-          ),
-          ...emIds.flatMap((id) =>
-            id.split(',').map((i) => i.trim().toUpperCase()),
-          ),
-        ]),
+      
+      // Check if there's already a field assignment for this employee on the same date
+      const checkTimeRangeQuery = `
+        SELECT id, nomor_ajuan, atten_date, dari_jam, sampai_jam 
+        FROM ${namaDatabaseDynamic}.emp_labor 
+        WHERE em_id = ? 
+          AND ajuan = '2' 
+          AND atten_date = ?
+      `;
+      
+      const checkParams = [
+        em_id, 
+        date
       ];
-      // TODO: Implement notification using NotificationService
-      // await this.notificationService.insertNotification(
-      //   combinedIds.join(','),
-      //   'Approval Tugas Luar',
-      //   'TugasLuar',
-      //   employee[0].em_id,
-      //   transaksi[0].id,
-      //   transaksi[0].nomor_ajuan,
-      //   employee[0].full_name,
-      //   namaDatabaseDynamic,
-      //   databaseMaster,
-      // );
-      if (sysdata.length > 0 && sysdata[0].name != null) {
-        // TODO: Implement notification using NotificationService
-        // await this.notificationService.insertNotification(
-        //   sysdata[0].name,
-        //   'Pengajuan Tugas Luar',
-        //   'TugasLuar',
-        //   employee[0].em_id,
-        //   null,
-        //   transaksi[0].nomor_ajuan,
-        //   employee[0].full_name,
-        //   namaDatabaseDynamic,
-        //   databaseMaster,
-        // );
+      console.log('Check query:', checkTimeRangeQuery);
+      console.log('Check params:', checkParams);
+      const [existingAssignments] = await trx.raw(checkTimeRangeQuery, checkParams);
+      
+      // Check for time overlap in JavaScript
+      const hasTimeOverlap = existingAssignments.some(assignment => {
+        const existingStart = assignment.dari_jam;
+        const existingEnd = assignment.sampai_jam;
+        
+        // Check if new time range overlaps with existing
+        return (
+          (start_time <= existingEnd && end_time >= existingStart) ||
+          (existingStart <= end_time && existingEnd >= start_time)
+        );
+      });
+      
+      if (hasTimeOverlap) {
+        await trx.rollback();
+        throw new BadRequestException('Tugas luar sudah di input untuk waktu tersebut');
       }
+      
+      // Generate nomor ajuan
+      const nomorAjuan = await generateNomorAjuan(trx, namaDatabaseDynamic);
+      
+      // Insert new assignment
+      const insertQuery = `INSERT INTO ${namaDatabaseDynamic}.emp_labor 
+        (em_id, atten_date, dari_jam, sampai_jam, em_delegation, uraian, nomor_ajuan, ajuan, status, dari_tgl, sampai_tgl, created_on) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, '2', 'Pending', ?, ?, NOW())`;
+       
+      const insertParams = [em_id, date, start_time, end_time, delegation_id, catatan, nomorAjuan, date, date];
+      console.log('Insert query:', insertQuery);
+      console.log('Insert params:', insertParams);
+      const [result] = await trx.raw(insertQuery, insertParams);
+      const assignmentId = result.insertId || (result[0] && result[0].insertId);
+      
+      console.log(`Creating new assignment for date ${date} with ID: ${assignmentId} and nomor ajuan: ${nomorAjuan}`);
+      
       await trx.commit();
+      
       return {
         status: true,
-        message: 'Berhasil tambah data tugas luar',
-        data: transaksi,
+        message: 'Data berhasil ditambahkan',
+        data: {
+          id: assignmentId,
+          nomor_ajuan: nomorAjuan,
+          em_id,
+          atten_date: date,
+          dari_jam: start_time,
+          sampai_jam: end_time,
+          em_delegation: delegation_id,
+          uraian: catatan,
+          status: 'Pending',
+          dari_tanggal: date,
+          sampai_tanggal: date
+        }
       };
-    } catch (e) {
+    } catch (error) {
       if (trx) await trx.rollback();
-      throw new InternalServerErrorException(e);
+      console.error('Error in field assignments store service:', error);
+      
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      
+      throw new InternalServerErrorException('Terjadi kesalahan: ' + error.message);
     }
   }
 }

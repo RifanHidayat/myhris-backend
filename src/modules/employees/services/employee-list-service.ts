@@ -22,7 +22,7 @@ export class EmployeeListService {
     emId: string;
     branchId: string;
   }): Promise<any> {
-    console.log('Masuk function employee/detail');
+    console.log('Masuk function employee');
     const database = databaseMaster(dto.tenant);
     const tenant = dto.tenant;
     const branchId = dto.branchId;
@@ -32,30 +32,36 @@ export class EmployeeListService {
     } else {
       whereCondition = `AND branch_id='${branchId}'`;
     }
-
-    const query = `
-      SELECT full_name,em_id,em_image FROM ${database}.employee WHERE status='ACTIVE' ${whereCondition}'
-    `;
+    
 
     const knex = this.dbService.getConnection(tenant);
+    let trx;
     try {
-      const trx = await knex.transaction();
-      const rawResults = (await trx.raw(query)) as
-        | { rows?: EmployeeDetailResult[] }
-        | EmployeeDetailResult[][];
-      const results: EmployeeDetailResult[] = Array.isArray(rawResults)
-        ? rawResults[0]
-        : (rawResults.rows ?? []);
+      trx = await knex.transaction();
+      
+      // Build query using query builder
+      let query = trx(`${database}.employee`)
+        .select('full_name', 'em_id', 'em_image')
+        .where('status', 'ACTIVE');
+      
+      // Add branch condition if provided
+      if (branchId && branchId !== '' && branchId !== null && branchId !== undefined) {
+        query = query.where('branch_id', branchId);
+      }
+      
+      const results = await query;
+      
+      await trx.commit();
+      
       return {
         status: true,
         message: 'Success get employee',
         data: results,
       };
-    } catch {
-      // trx bisa undefined jika error sebelum assignment
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      // if (typeof trx !== 'undefined') await trx.rollback();
-      throw new InternalServerErrorException('Terjadi kesalahan: ');
+    } catch (error) {
+      if (trx) await trx.rollback();
+      console.error('Error in employee list service:', error);
+      throw new InternalServerErrorException('Terjadi kesalahan: ' + error.message);
     }
   }
 }

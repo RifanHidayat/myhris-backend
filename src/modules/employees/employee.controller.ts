@@ -14,6 +14,8 @@ import { EmployeeListService } from './services/employee-list-service';
 import { EmployeeLastAttendanceService } from './services/employee-last-attendance';
 import { EmployeeDelegationService } from './services/employee-delegation.service';
 import { EmployeeDivisionService } from './services/employee-division.service';
+import { EmployeeFieldAssignmentsService } from './services/employee-field-assignments.service';
+
 import { EmployeeDetailDto, LastAttendanceRequestDto } from './dto/employee-detail.dto';
 import { GlobalParamsDto } from '../../common/dto/global-params.dto';
 
@@ -25,6 +27,8 @@ export class EmployeeController {
     private readonly employeeLastAttendanceService: EmployeeLastAttendanceService,
     private readonly employeeDelegationService: EmployeeDelegationService,
     private readonly employeeDivisionService: EmployeeDivisionService,
+    private readonly employeeFieldAssignmentsService: EmployeeFieldAssignmentsService,
+
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -169,7 +173,7 @@ export class EmployeeController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('employee-divisi')
+  @Get('division')
   async getEmployeeDivisi(
     @Query() globalParams: GlobalParamsDto
   ) {
@@ -185,4 +189,66 @@ export class EmployeeController {
     
     return this.employeeDivisionService.employeeDivisi(tenant, em_id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('field-assignments')
+  async getFieldAssignmentsByEmployee(
+    @Query() globalParams: GlobalParamsDto
+  ) {
+    const { tenant, em_id, start_periode, end_periode } = globalParams;
+    
+    // Validate required parameters
+    if (!tenant) {
+      throw new BadRequestException('Tenant parameter is required');
+    }
+    if (!em_id) {
+      throw new BadRequestException('Employee ID parameter is required');
+    }
+    if (!start_periode || !end_periode) {
+      throw new BadRequestException('Start period and end period are required');
+    }
+    
+    const dto = {
+      tenant,
+      em_id,
+      start_periode,
+      end_periode
+    };
+    
+    return this.employeeFieldAssignmentsService.getFieldAssignmentsByEmployee(dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('field-assignments-with-filters')
+  async getFieldAssignmentsByEmployeeWithFilters(
+    @Query() globalParams: GlobalParamsDto
+  ) {
+    const { tenant, em_id, start_periode, end_periode } = globalParams;
+    const { status, date_from, date_to } = globalParams as any;
+    
+    // Validate required parameters
+    if (!tenant) {
+      throw new BadRequestException('Tenant parameter is required');
+    }
+    if (!em_id) {
+      throw new BadRequestException('Employee ID parameter is required');
+    }
+    if (!start_periode || !end_periode) {
+      throw new BadRequestException('Start period and end period are required');
+    }
+    
+    const dto = {
+      tenant,
+      em_id,
+      start_periode,
+      end_periode,
+      status,
+      date_from,
+      date_to
+    };
+    
+    return this.employeeFieldAssignmentsService.getFieldAssignmentsByEmployeeWithFilters(dto);
+  }
+
+
 }

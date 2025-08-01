@@ -15,6 +15,7 @@ import { ImboxModule } from './modules/imbox/imbox.module';
 import { AttendanceModule } from './modules/attendances/attendance.module';
 import { DailyTasksModule } from './modules/daily-tasks/daily-tasks.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { FieldAssigmentsModule } from './modules/field-assigments/field-assigments.module';
 import { CommonModule } from './common/common.module';
 
 @Module({
@@ -31,6 +32,7 @@ import { CommonModule } from './common/common.module';
     AttendanceModule,
     DailyTasksModule,
     DashboardModule,
+    FieldAssigmentsModule,
     CommonModule,
   ],
   controllers: [AppController],

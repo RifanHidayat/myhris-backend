@@ -27,6 +27,8 @@ export class AuthController {
     console.log('AuthController: End period:', endPeriod);
 
     const dtoWithParams = {
+
+      
       ...loginDto,
       tenant,
       startPeriod: startPeriod || '2024-01-01',

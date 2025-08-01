@@ -7,6 +7,8 @@ import { EmployeeListService } from './services/employee-list-service';
 import { EmployeeLastAttendanceService } from './services/employee-last-attendance';
 import { EmployeeDelegationService } from './services/employee-delegation.service';
 import { EmployeeDivisionService } from './services/employee-division.service';
+import { EmployeeFieldAssignmentsService } from './services/employee-field-assignments.service';
+
 import { DbService } from '../../config/database.service';
 import { AuthModule } from '../auth/auth.module';
 
@@ -19,6 +21,7 @@ import { AuthModule } from '../auth/auth.module';
     EmployeeLastAttendanceService,
     EmployeeDelegationService,
     EmployeeDivisionService,
+    EmployeeFieldAssignmentsService,
     DbService,
   ],
   exports: [
@@ -27,6 +30,7 @@ import { AuthModule } from '../auth/auth.module';
     EmployeeLastAttendanceService,
     EmployeeDelegationService,
     EmployeeDivisionService,
+    EmployeeFieldAssignmentsService,
   ],
 })
 export class EmployeeModule {}

@@ -28,6 +28,10 @@ export class GlobalParamsDto {
   @IsString()
   @IsOptional()
   approver?: string;
+
+  @IsString()
+  @IsOptional()
+  nomor_ajuan?: string;
 }
 
 /**

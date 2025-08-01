@@ -194,13 +194,13 @@ export class EmployeeLastAttendanceService {
 
       // Build the main attendance query with places_coordinate join
       const attendanceQuery = `
-        SELECT places_coordinate.trx, attendance.* 
+        SELECT places_coordinate.trx, attendance.atten_date, attendance.signin_time, attendance.signout_time,attendance.id,attendance.breakin_time,attendance.breakout_time 
         FROM ${namaDatabaseDynamic}.attendance 
         LEFT JOIN ${dto.tenant}_hrm.places_coordinate 
           ON attendance.place_in = places_coordinate.place 
         WHERE em_id = ? 
           AND CONCAT(atten_date, ' ', signin_time) BETWEEN ? AND ?
-          AND atttype = '1' 
+        
         ORDER BY id DESC 
         LIMIT 1
       `;
@@ -211,132 +211,59 @@ export class EmployeeLastAttendanceService {
         `${startDate} ${startTime}`,
         `${endDate} ${endTime}`
       ]);
+      console.log('absensiNow : ',absensiNow);
 
-      // Build WFH query
-      let wfhQuery = '';
+      console.log('startDate : ',`${startDate} ${startTime}`);
+      console.log('endDate : ',`${endDate} ${endTime}`);
+      
+      // Build WFH query using query builder
+      let wfhQuery = trx(`${namaDatabaseDynamic}.emp_labor`)
+        .select('status', 'dari_jam as signing_time', 'nomor_ajuan')
+        .where('em_id', dto.em_id)
+        .whereRaw(`CONCAT(atten_date, ' ', dari_jam) >= ? AND NOW() >= ?`, [`${startDate} ${startTime}`, `${startDate} ${startTime}`])
+        .whereRaw(`CONCAT(atten_date, ' ', dari_jam) <= ? AND NOW() <= ?`, [`${endDate} ${endTime}`, `${endDate} ${endTime}`])
+        .whereIn('ajuan', ['4', '3'])
+        .where('status_transaksi', '1')
+        .orderBy('id', 'desc')
+        .limit(1);
+
+      // Add status condition based on approver
       if (dto.approver === '2') {
-        wfhQuery = `
-          SELECT emp_labor.status, emp_labor.dari_jam as signing_time, emp_labor.nomor_ajuan  
-          FROM ${namaDatabaseDynamic}.emp_labor 
-          WHERE em_id = ? 
-            AND (CONCAT(atten_date, ' ', dari_jam) >= ? AND NOW() >= ?)
-            AND (CONCAT(atten_date, ' ', dari_jam) <= ? AND NOW() <= ?)
-            AND (ajuan = '4' OR ajuan = '3') 
-            AND status_transaksi = '1' 
-            AND (status = 'Pending' OR status = 'Approve') 
-          ORDER BY id DESC 
-          LIMIT 1
-        `;
+        wfhQuery = wfhQuery.whereIn('status', ['Pending', 'Approve']);
       } else {
-        wfhQuery = `
-          SELECT emp_labor.status, emp_labor.dari_jam as signing_time, emp_labor.nomor_ajuan  
-          FROM ${namaDatabaseDynamic}.emp_labor 
-          WHERE em_id = ? 
-            AND (CONCAT(atten_date, ' ', dari_jam) >= ? AND NOW() >= ?)
-            AND (CONCAT(atten_date, ' ', dari_jam) <= ? AND NOW() <= ?)
-            AND (ajuan = '4' OR ajuan = '3') 
-            AND status_transaksi = '1' 
-            AND status = 'Pending'
-          ORDER BY id DESC 
-          LIMIT 1
-        `;
+        wfhQuery = wfhQuery.where('status', 'Pending');
       }
 
-      // Build offline attendance query
-      let absenOfflineQuery = '';
+      // Build offline attendance query using query builder
+      let offlineQuery = trx(`${namaDatabaseDynamic}.emp_labor`)
+        .select('atten_date', 'status', 'dari_jam as signing_time', 'nomor_ajuan', 'sampai_jam as signout_time')
+        .where('em_id', dto.em_id)
+        .where('ajuan', '5')
+        .where('status_transaksi', '1')
+        .orderBy('id', 'desc')
+        .limit(1);
+
+      // Add status condition based on approver
+      if (dto.approver === '2') {
+        offlineQuery = offlineQuery.whereIn('status', ['Pending', 'Approve']);
+      } else {
+        offlineQuery = offlineQuery.where('status', 'Pending');
+      }
+
+      // Add time conditions for offline query
       if (absensiNow.length > 0) {
-        if (dto.approver === '2') {
-          absenOfflineQuery = `
-            SELECT emp_labor.atten_date, emp_labor.status, emp_labor.dari_jam as signing_time, 
-                   emp_labor.nomor_ajuan, emp_labor.sampai_jam as signout_time  
-            FROM ${namaDatabaseDynamic}.emp_labor 
-            WHERE em_id = ? 
-              AND (CONCAT(?, ' ', ?) >= ? AND NOW() >= ?)
-              AND (CONCAT(atten_date, ' ', dari_jam) <= ? AND NOW() <= ?)
-              AND ajuan = '5' 
-              AND status_transaksi = '1' 
-              AND (status = 'Pending' OR status = 'Approve')
-            ORDER BY id DESC 
-            LIMIT 1
-          `;
-        } else {
-          absenOfflineQuery = `
-            SELECT emp_labor.atten_date, emp_labor.status, emp_labor.dari_jam as signing_time, 
-                   emp_labor.sampai_jam as signout_time, emp_labor.nomor_ajuan  
-            FROM ${namaDatabaseDynamic}.emp_labor 
-            WHERE em_id = ? 
-              AND (CONCAT(?, ' ', ?) >= ? AND NOW() >= ?)
-              AND (CONCAT(atten_date, ' ', dari_jam) <= ? AND NOW() <= ?)
-              AND ajuan = '5' 
-              AND status_transaksi = '1' 
-              AND status = 'Pending'
-            ORDER BY id DESC 
-            LIMIT 1
-          `;
-        }
+        offlineQuery = offlineQuery
+          .whereRaw(`CONCAT(?, ' ', ?) >= ? AND NOW() >= ?`, [absensiNow[0].atten_date, absensiNow[0].signin_time, `${startDate} ${startTime}`, `${startDate} ${startTime}`])
+          .whereRaw(`CONCAT(atten_date, ' ', dari_jam) <= ? AND NOW() <= ?`, [`${endDate} ${endTime}`, `${endDate} ${endTime}`]);
       } else {
-        if (dto.approver === '2') {
-          absenOfflineQuery = `
-            SELECT emp_labor.atten_date, emp_labor.status, emp_labor.dari_jam as signing_time, 
-                   emp_labor.nomor_ajuan, emp_labor.sampai_jam as signout_time  
-            FROM ${namaDatabaseDynamic}.emp_labor 
-            WHERE em_id = ? 
-              AND (CONCAT(atten_date, ' ', dari_jam) >= ? AND NOW() >= ?)
-              AND (CONCAT(atten_date, ' ', dari_jam) <= ? AND NOW() <= ?)
-              AND ajuan = '5' 
-              AND status_transaksi = '1' 
-              AND (status = 'Pending' OR status = 'Approve')
-            ORDER BY id DESC 
-            LIMIT 1
-          `;
-        } else {
-          absenOfflineQuery = `
-            SELECT emp_labor.atten_date, emp_labor.status, emp_labor.dari_jam as signing_time, 
-                   emp_labor.sampai_jam as signout_time, emp_labor.nomor_ajuan  
-            FROM ${namaDatabaseDynamic}.emp_labor 
-            WHERE em_id = ? 
-              AND (CONCAT(atten_date, ' ', dari_jam) >= ? AND NOW() >= ?)
-              AND (CONCAT(atten_date, ' ', dari_jam) <= ? AND NOW() <= ?)
-              AND ajuan = '5' 
-              AND status_transaksi = '1' 
-              AND status = 'Pending'
-            ORDER BY id DESC 
-            LIMIT 1
-          `;
-        }
+        offlineQuery = offlineQuery
+          .whereRaw(`CONCAT(atten_date, ' ', dari_jam) >= ? AND NOW() >= ?`, [`${startDate} ${startTime}`, `${startDate} ${startTime}`])
+          .whereRaw(`CONCAT(atten_date, ' ', dari_jam) <= ? AND NOW() <= ?`, [`${endDate} ${endTime}`, `${endDate} ${endTime}`]);
       }
 
-      // Execute all queries
-      const [wfh] = await trx.raw(wfhQuery, [
-        dto.em_id,
-        `${startDate} ${startTime}`,
-        `${startDate} ${startTime}`,
-        `${endDate} ${endTime}`,
-        `${endDate} ${endTime}`
-      ]);
-
-      let offline: any[] = [];
-      if (absensiNow.length > 0) {
-        const [offlineResult] = await trx.raw(absenOfflineQuery, [
-          dto.em_id,
-          absensiNow[0].atten_date,
-          absensiNow[0].signin_time,
-          `${startDate} ${startTime}`,
-          `${startDate} ${startTime}`,
-          `${endDate} ${endTime}`,
-          `${endDate} ${endTime}`
-        ]);
-        offline = offlineResult;
-      } else {
-        const [offlineResult] = await trx.raw(absenOfflineQuery, [
-          dto.em_id,
-          `${startDate} ${startTime}`,
-          `${startDate} ${startTime}`,
-          `${endDate} ${endTime}`,
-          `${endDate} ${endTime}`
-        ]);
-        offline = offlineResult;
-      }
+      // Execute queries
+      const wfh = await wfhQuery;
+      let offline = await offlineQuery;
 
       // Process results with complex logic
       let finalAttendance = absensiNow;

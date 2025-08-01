@@ -1,75 +1,224 @@
 import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { DbService } from '../../../config/database.service';
-
-interface FieldAssigmentsListDto {
-  database: string;
-  em_id: string;
-  bulan: string;
-  tahun: string;
-  branch_id?: string;
-  start_periode?: string;
-  end_periode?: string;
-  tenant?: string;
-  emId?: string;
-  [key: string]: any;
-}
+import { formatDbName, isDifferentPeriod } from '../../../common/utils';
 
 @Injectable()
 export class FieldAssigmentsListService {
   constructor(private readonly dbService: DbService) {}
 
-  async list(dto: FieldAssigmentsListDto): Promise<any> {
-    const {
-      database,
-      em_id,
-      bulan,
-      tahun,
-      branch_id,
-      start_periode,
-      end_periode,
-      tenant,
-      emId,
-    } = dto;
-    const convertYear = tahun.substring(2, 4);
-    let convertBulan;
-    if (bulan.length === 1) {
-      convertBulan = parseInt(bulan, 10) <= 9 ? `0${bulan}` : bulan;
-    } else {
-      convertBulan = bulan;
-    }
-    const namaDatabaseDynamic = `${database}_hrm${convertYear}${convertBulan}`;
-    const startPeriode = start_periode || '2024-02-03';
-    const endPeriode = end_periode || '2024-02-03';
-    const array1 = startPeriode.split('-');
-    const array2 = endPeriode.split('-');
-    const startPeriodeDynamic = `${database}_hrm${array1[0].substring(2, 4)}${array1[1]}`;
-    const endPeriodeDynamic = `${database}_hrm${array2[0].substring(2, 4)}${array2[1]}`;
-    let date1 = new Date(startPeriode);
-    let date2 = new Date(endPeriode);
-    const montStart = date1.getMonth() + 1;
-    const monthEnd = date2.getMonth() + 1;
-    const knex = this.dbService.getConnection(database);
+  /**
+   * Execute period query with UNION logic
+   */
+  private async executePeriodQuery(
+    tenant: string,
+    start_periode: string,
+    end_periode: string,
+    query: string,
+    params: any[] = []
+  ): Promise<any> {
+    const knex = this.dbService.getConnection(tenant);
     let trx;
+
     try {
       trx = await knex.transaction();
-      let url;
-      if (true) {
-        // Sederhanakan, logika bisa dioptimasi
-        url = `SELECT emp_labor.status as leave_status, emp_labor.*,overtime.name as type,overtime.dinilai FROM ${startPeriodeDynamic}.emp_labor LEFT JOIN ${database}_hrm.overtime ON overtime.id=emp_labor.typeId WHERE em_id='${em_id}' AND status_transaksi=1 AND (tgl_ajuan>='${startPeriode}' AND tgl_ajuan<='${endPeriode}') ORDER BY id DESC`;
-        if (montStart < monthEnd || date1.getFullYear() < date2.getFullYear()) {
-          url = `SELECT emp_labor.id as idd, emp_labor.status as leave_status, ${startPeriodeDynamic}.emp_labor.*,overtime.name as type ,overtime.dinilai FROM ${startPeriodeDynamic}.emp_labor LEFT JOIN ${database}_hrm.overtime ON overtime.id=emp_labor.typeId WHERE em_id='${em_id}' AND status_transaksi=1  AND (tgl_ajuan>='${startPeriode}' AND tgl_ajuan<='${endPeriode}')  AND branch_id='${branch_id}'  UNION ALL SELECT emp_labor.id as idd, emp_labor.status as leave_status, ${endPeriodeDynamic}.emp_labor.*,overtime.name as type ,overtime.dinilai FROM ${endPeriodeDynamic}.emp_labor LEFT JOIN ${database}_hrm.overtime ON overtime.id=emp_labor.typeId WHERE em_id='${em_id}' AND status_transaksi=1 AND ( tgl_ajuan<='${endPeriode}')  AND branch_id='${branch_id}' ORDER BY idd`;
-        }
+      
+      const startDb = formatDbName(start_periode, tenant);
+      const endDb = formatDbName(end_periode, tenant);
+      
+      const isDifferent = isDifferentPeriod(start_periode, end_periode);
+      
+      let results;
+      
+      if (isDifferent) {
+        // Different periods: UNION from both databases
+        const startQuery = query.replace('{startDb}', startDb);
+        const endQuery = query.replace('{endDb}', endDb);
+        
+        const unionQuery = `
+          ${startQuery}
+          UNION ALL
+          ${endQuery}
+          ORDER BY atten_date DESC, id DESC
+        `;
+        
+        const [unionResults] = await trx.raw(unionQuery, [...params, ...params]);
+        results = unionResults;
+      } else {
+        // Same period: Use only end database
+        const singleQuery = query.replace('{endDb}', endDb);
+        const [singleResults] = await trx.raw(singleQuery, params);
+        results = singleResults;
       }
-      const [results] = await trx.raw(url);
+      
       await trx.commit();
-      return {
-        status: true,
-        message: 'Berhasil ambil data tugas luar',
-        data: results,
-      };
-    } catch (e) {
+      return results;
+    } catch (error) {
       if (trx) await trx.rollback();
-      throw new InternalServerErrorException(e);
+      console.error('Error in executePeriodQuery:', error);
+      throw new InternalServerErrorException('Terjadi kesalahan: ' + error.message);
+    }
+  }
+
+  /**
+   * List field assignments by employee ID with period logic
+   * Returns simple data array
+   */
+  async listByEmployeeId(em_id: string, tenant: string, start_periode: string, end_periode: string): Promise<any> {
+    if (!tenant) {
+      throw new BadRequestException('Tenant parameter is required');
+    }
+    if (!em_id) {
+      throw new BadRequestException('Employee ID parameter is required');
+    }
+    if (!start_periode || !end_periode) {
+      throw new BadRequestException('Start period and end period are required');
+    }
+
+    const knex = this.dbService.getConnection(tenant);
+    let trx;
+    
+    try {
+      trx = await knex.transaction();
+      
+      const startDb = formatDbName(start_periode, tenant);
+      const endDb = formatDbName(end_periode, tenant);
+      
+      const isDifferent = isDifferentPeriod(start_periode, end_periode);
+      
+      let assignments;
+      
+      if (isDifferent) {
+        // Different periods: UNION from both databases with tgl_ajuan conditions
+        const startQuery = `
+          SELECT * FROM ${startDb}.emp_labor 
+          WHERE em_id = ? 
+            AND ajuan = '2' 
+            AND tgl_ajuan >= ?
+        `;
+        
+        const endQuery = `
+          SELECT * FROM ${endDb}.emp_labor 
+          WHERE em_id = ? 
+            AND ajuan = '2' 
+            AND tgl_ajuan <= ?
+        `;
+        
+        const unionQuery = `
+          ${startQuery}
+          UNION ALL
+          ${endQuery}
+          ORDER BY tgl_ajuan DESC, id DESC
+        `;
+        
+        const [results] = await trx.raw(unionQuery, [
+          em_id, start_periode,  // For start query
+          em_id, end_periode     // For end query
+        ]);
+        
+        assignments = results;
+      } else {
+        // Same period: Use only end database
+        const query = `
+          SELECT * FROM ${endDb}.emp_labor 
+          WHERE em_id = ? 
+            AND ajuan = '2'
+          ORDER BY tgl_ajuan DESC, id DESC
+        `;
+        
+        const [results] = await trx.raw(query, [em_id]);
+        assignments = results;
+      }
+      
+      await trx.commit();
+      
+      // Return simple data array
+      return assignments;
+    } catch (error) {
+      if (trx) await trx.rollback();
+      console.error('Error in field assignments list by employee service:', error);
+      throw new InternalServerErrorException('Terjadi kesalahan: ' + error.message);
+    }
+  }
+
+  /**
+   * List all field assignments
+   */
+  async listAll(tenant: string, start_periode: string, end_periode: string): Promise<any> {
+    if (!tenant) {
+      throw new BadRequestException('Tenant parameter is required');
+    }
+    if (!start_periode || !end_periode) {
+      throw new BadRequestException('Start period and end period are required');
+    }
+
+    const query = `
+      SELECT * FROM {endDb}.emp_labor 
+      WHERE ajuan = '2'
+    `;
+    
+    const results = await this.executePeriodQuery(tenant, start_periode, end_periode, query);
+    
+    return {
+      status: true,
+      message: 'Success get all field assignments',
+      data: {
+        assignments: results,
+        total_assignments: results.length
+      }
+    };
+  }
+
+  /**
+   * List detail by nomor ajuan
+   */
+  async listDetailByNomorAjuan(nomor_ajuan: string, tenant: string, start_periode: string, end_periode: string): Promise<any> {
+    if (!tenant) {
+      throw new BadRequestException('Tenant parameter is required');
+    }
+    if (!nomor_ajuan) {
+      throw new BadRequestException('Nomor ajuan parameter is required');
+    }
+    if (!start_periode || !end_periode) {
+      throw new BadRequestException('Start period and end period are required');
+    }
+
+    const query = `
+      SELECT * FROM {endDb}.emp_labor 
+      WHERE nomor_ajuan = ? AND ajuan = '2'
+    `;
+    
+    const results = await this.executePeriodQuery(tenant, start_periode, end_periode, query, [nomor_ajuan]);
+    
+    return {
+      status: true,
+      message: 'Success get field assignment detail',
+      data: {
+        nomor_ajuan,
+        assignment: results.length > 0 ? results[0] : null,
+        found: results.length > 0
+      }
+    };
+  }
+
+  /**
+   * Generic list method that routes to appropriate specific method
+   */
+  async list(query: any): Promise<any> {
+    const { tenant, em_id, nomor_ajuan, start_periode, end_periode } = query;
+    
+    if (!tenant) {
+      throw new BadRequestException('Tenant parameter is required');
+    }
+    if (!start_periode || !end_periode) {
+      throw new BadRequestException('Start period and end period are required');
+    }
+    
+    if (nomor_ajuan) {
+      return this.listDetailByNomorAjuan(nomor_ajuan, tenant, start_periode, end_periode);
+    } else if (em_id) {
+      return this.listByEmployeeId(em_id, tenant, start_periode, end_periode);
+    } else {
+      return this.listAll(tenant, start_periode, end_periode);
     }
   }
 }

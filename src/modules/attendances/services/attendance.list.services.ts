@@ -15,7 +15,7 @@ export class AttendanceListService {
     emId: string;
     branchId: string;
     startPeriode: string;
-    endPeriode: string;
+    endPeriode: string; 
   }): Promise<any> {
     console.log('Masuk function employee/detail');
     const tenant = dto.tenant;

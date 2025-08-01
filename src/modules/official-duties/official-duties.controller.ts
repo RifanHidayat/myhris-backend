@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Put, Delete, Param, Headers, UseGuards, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Headers, UseGuards, Body, Query, Req, BadRequestException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OfficialDutiesListService } from './services/official-duties-list';
 import { OfficialDutiesStoreService } from './services/official-duties-store.service';
 import { OfficialDutiesUpdateService } from './services/official-duties-update.service';
 import { OfficialDutiesDeleteService } from './services/official-duties-delete.service';
+import { OfficialDutiesStoreDto, OfficialDutiesUpdateDto } from './dto';
+import { GlobalParamsDto } from '../../common/dto/global-params.dto';
 
 /**
  * Controller untuk menu Dinas Resmi
@@ -19,63 +21,143 @@ export class OfficialDutiesController {
 
   @UseGuards(JwtAuthGuard)
   @Get('list')
-  async getAllData(
-    @Headers('x-tenant-id') tenant: string,
-    @Headers('x-em-id') emId: string,
-    @Query() query: any,
-  ): Promise<any> {
-    return this.officialDutiesListService.empLeaveLoadDinasLuar({ 
-      database: tenant, 
-      em_id: emId, 
-      ...query 
-    });
+  async getAllData(@Query() globalParams: GlobalParamsDto, @Req() req: any): Promise<any> {
+    const { tenant, start_periode, end_periode } = globalParams;
+    const { branch_id, em_id } = req.headers;
+    
+    if (!tenant) {
+      throw new BadRequestException('Tenant parameter is required');
+    }
+    if (!em_id) {
+      throw new BadRequestException('Employee ID parameter is required');
+    }
+    if (!start_periode || !end_periode) {
+      throw new BadRequestException('Start period and end period are required');
+    }
+    
+    // Extract bulan and tahun from start_periode
+    const startDate = new Date(start_periode);
+    const bulan = String(startDate.getMonth() + 1);
+    const tahun = String(startDate.getFullYear());
+    
+    const params = {
+      database: tenant,
+      em_id,
+      bulan,
+      tahun,
+      startPeriode: start_periode,
+      endPeriode: end_periode
+    };
+    
+    return this.officialDutiesListService.empLeaveLoadDinasLuar(params);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getById(
     @Param('id') id: string,
-    @Headers('x-tenant-id') tenant: string,
-    @Headers('x-em-id') emId: string,
+    @Query() globalParams: GlobalParamsDto,
+    @Req() req: any,
   ): Promise<any> {
+    const { tenant, start_periode, end_periode } = globalParams;
+    const { branch_id, em_id } = req.headers;
+    
+    if (!tenant) {
+      throw new BadRequestException('Tenant parameter is required');
+    }
+    if (!em_id) {
+      throw new BadRequestException('Employee ID parameter is required');
+    }
+    
     // TODO: Implementasi pengambilan data dinas resmi by ID
-    return { id };
+    return { id, tenant, em_id, start_periode, end_periode };
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('')
   async store(
-    @Headers('x-tenant-id') tenant: string,
-    @Headers('x-em-id') emId: string,
-    @Body() dto: any,
+    @Body() body: Omit<OfficialDutiesStoreDto, 'tenant' | 'em_id'>,
+    @Query() globalParams: GlobalParamsDto,
+    @Req() req: any,
   ): Promise<any> {
-    return this.officialDutiesStoreService.kirimTidakMasukKerja({ 
-      database: tenant, 
-      em_id: emId, 
-      ...dto 
-    });
+    const { tenant, start_periode, end_periode, branch_id, em_id } = globalParams;
+    
+    if (!tenant) {
+      throw new BadRequestException('Tenant parameter is required');
+    }
+    if (!em_id) {
+      throw new BadRequestException('Employee ID parameter is required');
+    }
+    if (!start_periode || !end_periode) {
+      throw new BadRequestException('Start period and end period are required');
+    }
+    
+    const storeDto: OfficialDutiesStoreDto = {
+      tenant,
+      em_id,
+      start_periode,
+      end_periode,
+      ...body
+    };
+    
+    return this.officialDutiesStoreService.storeOfficialDuties(storeDto);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Put(':id')
+  @Put(':nomor_ajuan')
   async update(
-    @Param('id') id: string,
-    @Headers('x-tenant-id') tenant: string,
-    @Headers('x-em-id') emId: string,
-    @Body() dto: any,
+    @Param('nomor_ajuan') nomor_ajuan: string,
+    @Body() body: Omit<OfficialDutiesUpdateDto, 'tenant' | 'nomor_ajuan'>,
+    @Query() globalParams: GlobalParamsDto,
+    @Req() req: any,
   ): Promise<any> {
-    // TODO: Implementasi update dinas resmi
-    return { id, ...dto };
+    const { tenant, start_periode, end_periode, branch_id, em_id } = globalParams;
+    
+    if (!tenant) {
+      throw new BadRequestException('Tenant parameter is required');
+    }
+    if (!nomor_ajuan) {
+      throw new BadRequestException('Nomor ajuan parameter is required');
+    }
+    if (!start_periode || !end_periode) {
+      throw new BadRequestException('Start period and end period are required');
+    }
+    
+    const updateDto: OfficialDutiesUpdateDto = {
+      tenant,
+      nomor_ajuan,
+      start_periode,
+      end_periode,
+      ...body
+    };
+    
+    return this.officialDutiesUpdateService.updateOfficialDuties(updateDto);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete(':id')
+  @Delete(':nomor_ajuan')
   async delete(
-    @Param('id') id: string,
-    @Headers('x-tenant-id') tenant: string,
-    @Headers('x-em-id') emId: string,
+    @Param('nomor_ajuan') nomor_ajuan: string,
+    @Query() globalParams: GlobalParamsDto,
+    @Req() req: any,
   ): Promise<any> {
-    // TODO: Implementasi delete dinas resmi
-    return { id };
+    const { tenant, start_periode, end_periode, branch_id, em_id } = globalParams;
+    
+    if (!tenant) {
+      throw new BadRequestException('Tenant parameter is required');
+    }
+    if (!nomor_ajuan) {
+      throw new BadRequestException('Nomor ajuan parameter is required');
+    }
+    if (!start_periode || !end_periode) {
+      throw new BadRequestException('Start period and end period are required');
+    }
+    
+    return this.officialDutiesDeleteService.deleteOfficialDuties(
+      nomor_ajuan,
+      tenant,
+      start_periode,
+      end_periode
+    );
   }
 }

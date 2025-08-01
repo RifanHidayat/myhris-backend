@@ -39,17 +39,17 @@ export class EmployeeDetailService {
     console.log('Masuk function employee/detail');
     console.log('dto', dto.tenant);
     const databasePeriode = formatDbNameNow(dto.tenant);
-    const database = databaseMaster(dto.tenant);
+    const database = dto.tenant;
     const dateNow = getDateNow();
     const emId = dto.emId;
     const tenant = dto.tenant;
     const currentDate = new Date();
     const query = `
       SELECT
-        IFNULL((SELECT  IFNULL(work_schedule.time_in ,'00:00:00') FROM ${databasePeriode}.emp_shift LEFT JOIN ${database}.work_schedule ON emp_shift.work_id=work_schedule.id WHERE emp_shift.em_id='${emId}' AND emp_shift.atten_date LIKE '%${dateNow}%') ,'00:00:00') AS jam_masuk,
-        IFNULL((SELECT  IFNULL(work_schedule.time_in ,'00:00:00') FROM ${databasePeriode}.emp_shift LEFT JOIN ${database}.work_schedule ON emp_shift.work_id=work_schedule.id WHERE emp_shift.em_id='${emId}' AND emp_shift.atten_date LIKE '%${dateNow}%') ,'00:00:00') AS time_in,
-        IFNULL((SELECT  IFNULL(work_schedule.time_out ,'00:00:00') FROM ${databasePeriode}.emp_shift LEFT JOIN ${database}.work_schedule ON emp_shift.work_id=work_schedule.id WHERE emp_shift.em_id='${emId}' AND emp_shift.atten_date LIKE '%${dateNow}%') ,'00:00:00') AS jam_keluar,
-        IFNULL((SELECT  IFNULL(work_schedule.time_out ,'00:00:00') FROM ${databasePeriode}.emp_shift LEFT JOIN ${database}.work_schedule ON emp_shift.work_id=work_schedule.id WHERE emp_shift.em_id='${emId}' AND emp_shift.atten_date LIKE '%${dateNow}%') ,'00:00:00') AS time_out,
+        IFNULL((SELECT  IFNULL(work_schedule.time_in ,'00:00:00') FROM ${databasePeriode}.emp_shift LEFT JOIN work_schedule ON emp_shift.work_id=work_schedule.id WHERE emp_shift.em_id='${emId}' AND emp_shift.atten_date LIKE '%${dateNow}%') ,'00:00:00') AS jam_masuk,
+        IFNULL((SELECT  IFNULL(work_schedule.time_in ,'00:00:00') FROM ${databasePeriode}.emp_shift LEFT JOIN work_schedule ON emp_shift.work_id=work_schedule.id WHERE emp_shift.em_id='${emId}' AND emp_shift.atten_date LIKE '%${dateNow}%') ,'00:00:00') AS time_in,
+        IFNULL((SELECT  IFNULL(work_schedule.time_out ,'00:00:00') FROM ${databasePeriode}.emp_shift LEFT JOIN work_schedule ON emp_shift.work_id=work_schedule.id WHERE emp_shift.em_id='${emId}' AND emp_shift.atten_date LIKE '%${dateNow}%') ,'00:00:00') AS jam_keluar,
+        IFNULL((SELECT  IFNULL(work_schedule.time_out ,'00:00:00') FROM ${databasePeriode}.emp_shift LEFT JOIN work_schedule ON emp_shift.work_id=work_schedule.id WHERE emp_shift.em_id='${emId}' AND emp_shift.atten_date LIKE '%${dateNow}%') ,'00:00:00') AS time_out,
         a.tipe_absen,
         IFNULL(employee_history.description ,em_status) as em_status,
         a.dep_id,
@@ -81,6 +81,9 @@ export class EmployeeDetailService {
         LEFT JOIN department c ON a.dep_id=c.id LEFT JOIN branch ON branch.id=a.branch_id WHERE a.em_id='${emId}'
         GROUP BY a.em_id
     `;
+
+
+    console.log('query employee detail :   ', query);
 
     const knex = this.dbService.getConnection(database);
     let trx;
@@ -137,6 +140,8 @@ export class EmployeeDetailService {
         }
       }
       
+
+      
       if (
         results[0].tipe_absen == '' ||
         results[0].tipe_absen == '0' ||
@@ -184,7 +189,7 @@ export class EmployeeDetailService {
       return {
         status: true,
         message: 'Success get employee detail',
-        data: results,
+        data: results[0],
       };
     } catch (error) {
       if (trx) await trx.rollback();
